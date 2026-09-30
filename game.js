@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 3: Ставить / ломать блоки
+// CUBE LIFE — Этап 3.1: Ломать/ставить (ПК мышь + тел кнопки)
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -9,6 +9,9 @@ if (tg) {
 }
 
 const canvas = document.getElementById('game-canvas');
+
+// Определяем — телефон или ПК
+const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
 // ============ СЦЕНА ============
 const scene = new THREE.Scene();
@@ -104,8 +107,6 @@ function createLeafMaterial() {
 // ============ БЛОКИ ============
 
 const BLOCK_SIZE = 1;
-
-// Карта блоков: ключ "x,y,z" → объект THREE.Mesh
 const blockMap = new Map();
 
 function blockKey(x, y, z) {
@@ -118,19 +119,13 @@ function createBlock(x, y, z, material) {
     block.position.set(x, y, z);
     block.userData.isBlock = true;
     scene.add(block);
-
-    // Сохраняем в карту
     blockMap.set(blockKey(x, y, z), block);
-
     return block;
 }
 
 function removeBlock(block) {
-    // Удаляем из карты
     const key = blockKey(block.position.x, block.position.y, block.position.z);
     blockMap.delete(key);
-
-    // Удаляем из сцены
     scene.remove(block);
     block.geometry.dispose();
 }
@@ -170,7 +165,7 @@ createBlock(-2, 4, -3, leafMaterial);
 createBlock(-2, 5, -2, leafMaterial);
 
 // ============================================================
-// ПОДСВЕТКА БЛОКА (на который смотрим)
+// ПОДСВЕТКА БЛОКА
 // ============================================================
 
 const highlightGeometry = new THREE.BoxGeometry(
@@ -330,70 +325,64 @@ function toggleCamera() {
 }
 window.toggleCamera = toggleCamera;
 
-// ============ МЫШЬ — POINTER LOCK ============
+// ============ POINTER LOCK (только ПК) ============
 let isPointerLocked = false;
 
-canvas.addEventListener('click', () => {
-    if (!isPointerLocked) {
-        canvas.requestPointerLock().catch(err => {
-            console.log('Pointer lock error:', err);
-        });
-    }
-});
+if (!isMobile) {
+    canvas.addEventListener('click', () => {
+        if (!isPointerLocked) {
+            canvas.requestPointerLock().catch(err => {
+                console.log('Pointer lock error:', err);
+            });
+        }
+    });
 
-document.addEventListener('pointerlockchange', () => {
-    isPointerLocked = document.pointerLockElement === canvas;
-});
+    document.addEventListener('pointerlockchange', () => {
+        isPointerLocked = document.pointerLockElement === canvas;
+    });
 
-document.addEventListener('mousemove', (e) => {
-    if (!isPointerLocked) return;
+    document.addEventListener('mousemove', (e) => {
+        if (!isPointerLocked) return;
 
-    const deltaX = e.movementX;
-    const deltaY = e.movementY;
+        const deltaX = e.movementX;
+        const deltaY = e.movementY;
 
-    if (cameraMode === 3) {
-        cameraFollowAngle -= deltaX * 0.003;
-        cameraPitchAngle -= deltaY * 0.003;
-        cameraPitchAngle = Math.max(-0.3, Math.min(1.2, cameraPitchAngle));
-    } else {
-        player.angle -= deltaX * 0.003;
-        cameraPitchAngle -= deltaY * 0.003;
-        cameraPitchAngle = Math.max(-0.8, Math.min(0.8, cameraPitchAngle));
-    }
-});
+        if (cameraMode === 3) {
+            cameraFollowAngle -= deltaX * 0.003;
+            cameraPitchAngle -= deltaY * 0.003;
+            cameraPitchAngle = Math.max(-0.3, Math.min(1.2, cameraPitchAngle));
+        } else {
+            player.angle -= deltaX * 0.003;
+            cameraPitchAngle -= deltaY * 0.003;
+            cameraPitchAngle = Math.max(-0.8, Math.min(0.8, cameraPitchAngle));
+        }
+    });
+}
 
-// ============ РАЗРУШЕНИЕ / УСТАНОВКА БЛОКОВ ============
+// ============================================================
+// РАЗРУШЕНИЕ / УСТАНОВКА
+// ============================================================
 
-// Raycaster для поиска блока под прицелом
 const raycaster = new THREE.Raycaster();
-const screenCenter = new THREE.Vector2(0, 0); // центр экрана
+const screenCenter = new THREE.Vector2(0, 0);
 
 function getTargetBlock() {
     raycaster.setFromCamera(screenCenter, camera);
-    
-    // Все блоки из карты
     const allBlocks = Array.from(blockMap.values());
     const intersects = raycaster.intersectObjects(allBlocks);
-
-    if (intersects.length > 0) {
-        return intersects[0]; // первый (ближайший) блок
-    }
+    if (intersects.length > 0) return intersects[0];
     return null;
 }
 
 function breakBlock() {
     const hit = getTargetBlock();
     if (!hit) return;
-    
     const block = hit.object;
-    
-    // Не даём сломать блок под человечком (если он стоит на нём)
+
     const dx = Math.abs(block.position.x - player.x);
     const dz = Math.abs(block.position.z - player.z);
-    if (dx < 0.6 && dz < 0.6 && block.position.y < 1) {
-        return; // не ломаем под ногами
-    }
-    
+    if (dx < 0.6 && dz < 0.6 && block.position.y < 1) return;
+
     removeBlock(block);
 }
 
@@ -401,96 +390,73 @@ function placeBlock() {
     const hit = getTargetBlock();
     if (!hit) return;
 
-    // Позиция нового блока = позиция блока + нормаль
     const normal = hit.face.normal.clone();
     const newPos = hit.object.position.clone().add(normal);
 
-    // Проверяем, что там ещё нет блока
     const key = blockKey(newPos.x, newPos.y, newPos.z);
     if (blockMap.has(key)) return;
 
-    // Не ставим блок в человечка
     const dx = Math.abs(newPos.x - player.x);
     const dy = newPos.y - 0.5;
     const dz = Math.abs(newPos.z - player.z);
-    if (dx < 0.6 && dz < 0.6 && dy > -0.5 && dy < 1.5) {
-        return;
-    }
+    if (dx < 0.6 && dz < 0.6 && dy > -0.5 && dy < 1.5) return;
 
-    // Не ставим ниже уровня мира
     if (newPos.y < 0) return;
 
-    // Ставим блок (пока трава)
     createBlock(newPos.x, newPos.y, newPos.z, grassMaterial);
 }
 
-// Слушатели кликов
-document.addEventListener('mousedown', (e) => {
-    if (e.button === 0) {
-        // ЛКМ — сломать
-        breakBlock();
-    } else if (e.button === 2) {
-        // ПКМ — поставить
-        placeBlock();
-    }
-});
+// Функции для кнопок на экране (для мобильных)
+window.breakBlockBtn = breakBlock;
+window.placeBlockBtn = placeBlock;
 
-// Отключаем контекстное меню на ПКМ
-canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+// ============ МЫШЬ (только ПК) ============
+if (!isMobile) {
+    document.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+            // ЛКМ — поставить
+            placeBlock();
+        } else if (e.button === 2) {
+            // ПКМ — сломать
+            breakBlock();
+        }
+    });
+
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+}
 
 // ============ ТАЧ (телефон) ============
 let lastTouchX = 0;
 let lastTouchY = 0;
-let touchStartTime = 0;
-let touchMoved = false;
 
-canvas.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
+if (isMobile) {
+    canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+        }
+    }, { passive: true });
+
+    canvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1) return;
+
+        const deltaX = e.touches[0].clientX - lastTouchX;
+        const deltaY = e.touches[0].clientY - lastTouchY;
         lastTouchX = e.touches[0].clientX;
         lastTouchY = e.touches[0].clientY;
-        touchStartTime = Date.now();
-        touchMoved = false;
-    }
-}, { passive: true });
 
-canvas.addEventListener('touchmove', (e) => {
-    if (e.touches.length !== 1) return;
-
-    const deltaX = e.touches[0].clientX - lastTouchX;
-    const deltaY = e.touches[0].clientY - lastTouchY;
-    lastTouchX = e.touches[0].clientX;
-    lastTouchY = e.touches[0].clientY;
-
-    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
-        touchMoved = true;
-    }
-
-    if (cameraMode === 3) {
-        cameraFollowAngle -= deltaX * 0.01;
-        cameraPitchAngle -= deltaY * 0.01;
-        cameraPitchAngle = Math.max(-0.3, Math.min(1.2, cameraPitchAngle));
-    } else {
-        player.angle -= deltaX * 0.01;
-    }
-}, { passive: true });
-
-canvas.addEventListener('touchend', (e) => {
-    if (touchMoved) return;
-    
-    const duration = Date.now() - touchStartTime;
-    
-    // Короткий тап — поставить блок, долгий — сломать
-    // (или можно наоборот — потом подстроим)
-    if (duration < 200) {
-        placeBlock(); // короткий — поставить
-    } else if (duration > 500) {
-        breakBlock(); // долгий — сломать
-    }
-});
+        if (cameraMode === 3) {
+            cameraFollowAngle -= deltaX * 0.01;
+            cameraPitchAngle -= deltaY * 0.01;
+            cameraPitchAngle = Math.max(-0.3, Math.min(1.2, cameraPitchAngle));
+        } else {
+            player.angle -= deltaX * 0.01;
+        }
+    }, { passive: true });
+}
 
 // ============ ОБНОВЛЕНИЕ ============
 function update() {
-    // Поворот человечка
     if (keys['a'] || keys['arrowleft']) {
         player.angle += player.turnSpeed;
     }
@@ -498,7 +464,6 @@ function update() {
         player.angle -= player.turnSpeed;
     }
 
-    // Движение
     if (keys['w'] || keys['arrowup']) {
         player.x += Math.sin(player.angle) * player.speed;
         player.z += Math.cos(player.angle) * player.speed;
@@ -508,12 +473,10 @@ function update() {
         player.z -= Math.cos(player.angle) * player.speed;
     }
 
-    // Границы мира
     const limit = WORLD_SIZE / 2 - 0.5;
     player.x = Math.max(-limit, Math.min(limit, player.x));
     player.z = Math.max(-limit, Math.min(limit, player.z));
 
-    // Применяем к человечку
     human.position.x = player.x;
     human.position.z = player.z;
     human.rotation.y = player.angle;
@@ -551,7 +514,7 @@ function update() {
         human.visible = false;
     }
 
-    // ============ ПОДСВЕТКА БЛОКА ============
+    // ============ ПОДСВЕТКА ============
     const hit = getTargetBlock();
     if (hit) {
         highlightBox.position.copy(hit.object.position);
@@ -579,3 +542,9 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// ============ СКРЫВАЕМ КНОПКИ НА ПК ============
+if (!isMobile) {
+    const mobileOnly = document.querySelectorAll('.mobile-only');
+    mobileOnly.forEach(el => el.style.display = 'none');
+}
