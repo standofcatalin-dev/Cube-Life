@@ -86,7 +86,6 @@ html, body {
     justify-content: center;
     z-index: 10;
     pointer-events: auto;
-    transition: transform 0.1s, background 0.1s;
 }
 
 #camera-btn:active {
@@ -94,39 +93,38 @@ html, body {
     transform: scale(0.9);
 }
 
-/* ===== УПРАВЛЕНИЕ ===== */
+/* ===== УПРАВЛЕНИЕ ДВИЖЕНИЕМ ===== */
 #controls {
     position: absolute;
-    bottom: 30px;
+    bottom: 100px;
     left: 0;
     right: 0;
     display: flex;
     justify-content: space-between;
-    padding: 0 30px;
+    padding: 0 20px;
     z-index: 10;
     pointer-events: none;
 }
 
 .controls-left, .controls-right {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     pointer-events: auto;
 }
 
 .ctrl-btn {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 3px solid #7eff7e;
     background: rgba(0, 0, 0, 0.5);
     color: #7eff7e;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: bold;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.1s, background 0.1s;
 }
 
 .ctrl-btn:active {
@@ -136,6 +134,54 @@ html, body {
 
 .ctrl-btn.gas {
     background: rgba(126, 255, 126, 0.2);
+}
+
+/* ===== КНОПКИ ДЕЙСТВИЙ (ломать/ставить) ===== */
+#action-buttons {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#action-buttons button {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid;
+    background: rgba(0, 0, 0, 0.6);
+    font-size: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    transition: transform 0.1s;
+}
+
+#break-btn {
+    border-color: #ff4444;
+    color: #ff4444;
+}
+
+#break-btn:active {
+    background: rgba(255, 68, 68, 0.4);
+    transform: scale(0.9);
+}
+
+#place-btn {
+    border-color: #44ff44;
+    color: #44ff44;
+}
+
+#place-btn:active {
+    background: rgba(68, 255, 68, 0.4);
+    transform: scale(0.9);
 }
 
 /* ===== ПОДСКАЗКА ===== */
