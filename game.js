@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 2.2: Pointer Lock (захват мыши) + камеры
+// CUBE LIFE — Этап 3: Ставить / ломать блоки
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -104,15 +104,35 @@ function createLeafMaterial() {
 // ============ БЛОКИ ============
 
 const BLOCK_SIZE = 1;
-const blocks = [];
+
+// Карта блоков: ключ "x,y,z" → объект THREE.Mesh
+const blockMap = new Map();
+
+function blockKey(x, y, z) {
+    return `${Math.round(x)},${Math.round(y)},${Math.round(z)}`;
+}
 
 function createBlock(x, y, z, material) {
     const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     const block = new THREE.Mesh(geometry, material);
     block.position.set(x, y, z);
+    block.userData.isBlock = true;
     scene.add(block);
-    blocks.push(block);
+
+    // Сохраняем в карту
+    blockMap.set(blockKey(x, y, z), block);
+
     return block;
+}
+
+function removeBlock(block) {
+    // Удаляем из карты
+    const key = blockKey(block.position.x, block.position.y, block.position.z);
+    blockMap.delete(key);
+
+    // Удаляем из сцены
+    scene.remove(block);
+    block.geometry.dispose();
 }
 
 // ============ МИР 8×8 ============
@@ -150,6 +170,25 @@ createBlock(-2, 4, -3, leafMaterial);
 createBlock(-2, 5, -2, leafMaterial);
 
 // ============================================================
+// ПОДСВЕТКА БЛОКА (на который смотрим)
+// ============================================================
+
+const highlightGeometry = new THREE.BoxGeometry(
+    BLOCK_SIZE + 0.02,
+    BLOCK_SIZE + 0.02,
+    BLOCK_SIZE + 0.02
+);
+const highlightMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.8
+});
+const highlightBox = new THREE.Mesh(highlightGeometry, highlightMaterial);
+highlightBox.visible = false;
+scene.add(highlightBox);
+
+// ============================================================
 // ЧЕЛОВЕЧЕК
 // ============================================================
 
@@ -162,13 +201,11 @@ function createHuman() {
     const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
     const hairMat = new THREE.MeshLambertMaterial({ color: 0x4a2c0a });
 
-    // Голова
     const headGeom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
     const head = new THREE.Mesh(headGeom, skinMat);
     head.position.y = 1.75;
     human.add(head);
 
-    // Глаза
     const eyeGeom = new THREE.BoxGeometry(0.1, 0.1, 0.05);
     const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
@@ -180,19 +217,16 @@ function createHuman() {
     eyeRight.position.set(0.12, 1.8, 0.26);
     human.add(eyeRight);
 
-    // Волосы
     const hairGeom = new THREE.BoxGeometry(0.52, 0.15, 0.52);
     const hair = new THREE.Mesh(hairGeom, hairMat);
     hair.position.y = 1.98;
     human.add(hair);
 
-    // Тело
     const bodyGeom = new THREE.BoxGeometry(0.55, 0.7, 0.3);
     const body = new THREE.Mesh(bodyGeom, shirtMat);
     body.position.y = 1.15;
     human.add(body);
 
-    // Руки
     const armGeom = new THREE.BoxGeometry(0.2, 0.65, 0.2);
 
     const armLeft = new THREE.Mesh(armGeom, shirtMat);
@@ -212,7 +246,6 @@ function createHuman() {
     handRight.position.set(0.4, 0.75, 0);
     human.add(handRight);
 
-    // Ноги
     const legGeom = new THREE.BoxGeometry(0.22, 0.6, 0.22);
 
     const legLeft = new THREE.Mesh(legGeom, pantsMat);
@@ -223,7 +256,6 @@ function createHuman() {
     legRight.position.set(0.15, 0.5, 0);
     human.add(legRight);
 
-    // Обувь
     const shoeGeom = new THREE.BoxGeometry(0.24, 0.12, 0.28);
 
     const shoeLeft = new THREE.Mesh(shoeGeom, shoeMat);
@@ -247,7 +279,6 @@ scene.add(human);
 
 const keys = {};
 
-// Позиция человечка
 const player = {
     x: 0,
     z: 0,
@@ -256,12 +287,10 @@ const player = {
     turnSpeed: 0.05
 };
 
-// Камера
-let cameraMode = 3;              // 1 = от 1-го лица, 3 = от 3-го лица
-let cameraFollowAngle = 0;       // угол камеры для 3-го лица
-let cameraPitchAngle = 0;        // вертикальный наклон камеры
+let cameraMode = 3;
+let cameraFollowAngle = 0;
+let cameraPitchAngle = 0;
 
-// ============ КЛАВИАТУРА (с поддержкой русской раскладки) ============
 const KEY_MAP = {
     'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v'
 };
@@ -306,7 +335,9 @@ let isPointerLocked = false;
 
 canvas.addEventListener('click', () => {
     if (!isPointerLocked) {
-        canvas.requestPointerLock();
+        canvas.requestPointerLock().catch(err => {
+            console.log('Pointer lock error:', err);
+        });
     }
 });
 
@@ -321,26 +352,104 @@ document.addEventListener('mousemove', (e) => {
     const deltaY = e.movementY;
 
     if (cameraMode === 3) {
-        // 3-е лицо: вращаем камеру вокруг человечка
         cameraFollowAngle -= deltaX * 0.003;
         cameraPitchAngle -= deltaY * 0.003;
         cameraPitchAngle = Math.max(-0.3, Math.min(1.2, cameraPitchAngle));
     } else {
-        // 1-е лицо: поворачиваем человечка + смотрим вверх/вниз
         player.angle -= deltaX * 0.003;
         cameraPitchAngle -= deltaY * 0.003;
         cameraPitchAngle = Math.max(-0.8, Math.min(0.8, cameraPitchAngle));
     }
 });
 
+// ============ РАЗРУШЕНИЕ / УСТАНОВКА БЛОКОВ ============
+
+// Raycaster для поиска блока под прицелом
+const raycaster = new THREE.Raycaster();
+const screenCenter = new THREE.Vector2(0, 0); // центр экрана
+
+function getTargetBlock() {
+    raycaster.setFromCamera(screenCenter, camera);
+    
+    // Все блоки из карты
+    const allBlocks = Array.from(blockMap.values());
+    const intersects = raycaster.intersectObjects(allBlocks);
+
+    if (intersects.length > 0) {
+        return intersects[0]; // первый (ближайший) блок
+    }
+    return null;
+}
+
+function breakBlock() {
+    const hit = getTargetBlock();
+    if (!hit) return;
+    
+    const block = hit.object;
+    
+    // Не даём сломать блок под человечком (если он стоит на нём)
+    const dx = Math.abs(block.position.x - player.x);
+    const dz = Math.abs(block.position.z - player.z);
+    if (dx < 0.6 && dz < 0.6 && block.position.y < 1) {
+        return; // не ломаем под ногами
+    }
+    
+    removeBlock(block);
+}
+
+function placeBlock() {
+    const hit = getTargetBlock();
+    if (!hit) return;
+
+    // Позиция нового блока = позиция блока + нормаль
+    const normal = hit.face.normal.clone();
+    const newPos = hit.object.position.clone().add(normal);
+
+    // Проверяем, что там ещё нет блока
+    const key = blockKey(newPos.x, newPos.y, newPos.z);
+    if (blockMap.has(key)) return;
+
+    // Не ставим блок в человечка
+    const dx = Math.abs(newPos.x - player.x);
+    const dy = newPos.y - 0.5;
+    const dz = Math.abs(newPos.z - player.z);
+    if (dx < 0.6 && dz < 0.6 && dy > -0.5 && dy < 1.5) {
+        return;
+    }
+
+    // Не ставим ниже уровня мира
+    if (newPos.y < 0) return;
+
+    // Ставим блок (пока трава)
+    createBlock(newPos.x, newPos.y, newPos.z, grassMaterial);
+}
+
+// Слушатели кликов
+document.addEventListener('mousedown', (e) => {
+    if (e.button === 0) {
+        // ЛКМ — сломать
+        breakBlock();
+    } else if (e.button === 2) {
+        // ПКМ — поставить
+        placeBlock();
+    }
+});
+
+// Отключаем контекстное меню на ПКМ
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
 // ============ ТАЧ (телефон) ============
 let lastTouchX = 0;
 let lastTouchY = 0;
+let touchStartTime = 0;
+let touchMoved = false;
 
 canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
         lastTouchX = e.touches[0].clientX;
         lastTouchY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+        touchMoved = false;
     }
 }, { passive: true });
 
@@ -352,6 +461,10 @@ canvas.addEventListener('touchmove', (e) => {
     lastTouchX = e.touches[0].clientX;
     lastTouchY = e.touches[0].clientY;
 
+    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+        touchMoved = true;
+    }
+
     if (cameraMode === 3) {
         cameraFollowAngle -= deltaX * 0.01;
         cameraPitchAngle -= deltaY * 0.01;
@@ -361,9 +474,23 @@ canvas.addEventListener('touchmove', (e) => {
     }
 }, { passive: true });
 
+canvas.addEventListener('touchend', (e) => {
+    if (touchMoved) return;
+    
+    const duration = Date.now() - touchStartTime;
+    
+    // Короткий тап — поставить блок, долгий — сломать
+    // (или можно наоборот — потом подстроим)
+    if (duration < 200) {
+        placeBlock(); // короткий — поставить
+    } else if (duration > 500) {
+        breakBlock(); // долгий — сломать
+    }
+});
+
 // ============ ОБНОВЛЕНИЕ ============
 function update() {
-    // Поворот человечка (A/D)
+    // Поворот человечка
     if (keys['a'] || keys['arrowleft']) {
         player.angle += player.turnSpeed;
     }
@@ -371,7 +498,7 @@ function update() {
         player.angle -= player.turnSpeed;
     }
 
-    // Движение вперёд/назад (W/S)
+    // Движение
     if (keys['w'] || keys['arrowup']) {
         player.x += Math.sin(player.angle) * player.speed;
         player.z += Math.cos(player.angle) * player.speed;
@@ -393,7 +520,6 @@ function update() {
 
     // ============ КАМЕРА ============
     if (cameraMode === 3) {
-        // === 3-Е ЛИЦО ===
         if (keys['left']) cameraFollowAngle += 0.03;
         if (keys['right']) cameraFollowAngle -= 0.03;
 
@@ -413,7 +539,6 @@ function update() {
         camera.lookAt(player.x, 1.2, player.z);
         human.visible = true;
     } else {
-        // === 1-Е ЛИЦО ===
         camera.position.x = player.x;
         camera.position.z = player.z;
         camera.position.y = 1.75;
@@ -425,6 +550,18 @@ function update() {
         camera.lookAt(lookX, lookY, lookZ);
         human.visible = false;
     }
+
+    // ============ ПОДСВЕТКА БЛОКА ============
+    const hit = getTargetBlock();
+    if (hit) {
+        highlightBox.position.copy(hit.object.position);
+        highlightBox.visible = true;
+    } else {
+        highlightBox.visible = false;
+    }
+
+    // ============ HUD ============
+    document.getElementById('world-info').textContent = blockMap.size + ' блоков';
 }
 
 // ============ ЦИКЛ ============
@@ -442,6 +579,3 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
-// ============ HUD ============
-document.getElementById('world-info').textContent = blocks.length + ' блоков';
