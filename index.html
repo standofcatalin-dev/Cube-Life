@@ -22,19 +22,23 @@
         <!-- Кнопка смены камеры -->
         <button id="camera-btn" onclick="toggleCamera()">📷</button>
 
-        <!-- Управление движением (мобильные) -->
+        <!-- Управление движением (только мобильные) -->
         <div id="controls" class="mobile-only">
             <div class="controls-left">
-                <button class="ctrl-btn" 
-                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')">◀</button>
-                <button class="ctrl-btn" 
-                        ontouchstart="pressKey('d')" ontouchend="releaseKey('d')">▶</button>
+                <button class="ctrl-btn"
+                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')"
+                        onmousedown="pressKey('a')" onmouseup="releaseKey('a')">◀</button>
+                <button class="ctrl-btn"
+                        ontouchstart="pressKey('d')" ontouchend="releaseKey('d')"
+                        onmousedown="pressKey('d')" onmouseup="releaseKey('d')">▶</button>
             </div>
             <div class="controls-right">
-                <button class="ctrl-btn" 
-                        ontouchstart="pressKey('s')" ontouchend="releaseKey('s')">▼</button>
-                <button class="ctrl-btn gas" 
-                        ontouchstart="pressKey('w')" ontouchend="releaseKey('w')">▲</button>
+                <button class="ctrl-btn"
+                        ontouchstart="pressKey('s')" ontouchend="releaseKey('s')"
+                        onmousedown="pressKey('s')" onmouseup="releaseKey('s')">▼</button>
+                <button class="ctrl-btn gas"
+                        ontouchstart="pressKey('w')" ontouchend="releaseKey('w')"
+                        onmousedown="pressKey('w')" onmouseup="releaseKey('w')">▲</button>
             </div>
         </div>
 
