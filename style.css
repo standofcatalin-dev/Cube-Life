@@ -53,15 +53,48 @@ html, body {
     text-shadow: 0 0 10px rgba(126, 255, 126, 0.6);
 }
 
+.hud-right {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+}
+
 .hud-info {
     background: rgba(0, 0, 0, 0.7);
-    padding: 10px 18px;
-    border-radius: 10px;
-    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
     border: 2px solid #ffffff50;
 }
 
-/* ===== КНОПКИ УПРАВЛЕНИЯ ===== */
+/* ===== КНОПКА КАМЕРЫ ===== */
+#camera-btn {
+    position: absolute;
+    top: 90px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid #ffc800;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: auto;
+    transition: transform 0.1s, background 0.1s;
+}
+
+#camera-btn:active {
+    background: rgba(255, 200, 0, 0.4);
+    transform: scale(0.9);
+}
+
+/* ===== УПРАВЛЕНИЕ ===== */
 #controls {
     position: absolute;
     bottom: 30px;
@@ -74,26 +107,35 @@ html, body {
     pointer-events: none;
 }
 
+.controls-left, .controls-right {
+    display: flex;
+    gap: 12px;
+    pointer-events: auto;
+}
+
 .ctrl-btn {
-    width: 70px;
-    height: 70px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     border: 3px solid #7eff7e;
     background: rgba(0, 0, 0, 0.5);
     color: #7eff7e;
-    font-size: 28px;
+    font-size: 24px;
     font-weight: bold;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    pointer-events: auto;
     transition: transform 0.1s, background 0.1s;
 }
 
 .ctrl-btn:active {
     background: rgba(126, 255, 126, 0.3);
     transform: scale(0.9);
+}
+
+.ctrl-btn.gas {
+    background: rgba(126, 255, 126, 0.2);
 }
 
 /* ===== ПОДСКАЗКА ===== */
