@@ -37,11 +37,9 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 // ============ ОСВЕЩЕНИЕ ============
-// Общий свет
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
 scene.add(ambientLight);
 
-// Солнце
 const sunLight = new THREE.DirectionalLight(0xffffff, 1);
 sunLight.position.set(50, 100, 30);
 sunLight.castShadow = true;
@@ -75,40 +73,25 @@ const roadLineMaterial = new THREE.MeshStandardMaterial({
     color: 0xffcc00
 });
 
-// Горизонтальная дорога
-const road1 = new THREE.Mesh(
-    new THREE.PlaneGeometry(500, 10),
-    roadMaterial
-);
+const road1 = new THREE.Mesh(new THREE.PlaneGeometry(500, 10), roadMaterial);
 road1.rotation.x = -Math.PI / 2;
 road1.position.y = 0.02;
 road1.receiveShadow = true;
 scene.add(road1);
 
-// Вертикальная дорога
-const road2 = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 500),
-    roadMaterial
-);
+const road2 = new THREE.Mesh(new THREE.PlaneGeometry(10, 500), roadMaterial);
 road2.rotation.x = -Math.PI / 2;
 road2.position.y = 0.02;
 road2.receiveShadow = true;
 scene.add(road2);
 
-// Разметка на дорогах
 for (let i = -240; i <= 240; i += 20) {
-    const line1 = new THREE.Mesh(
-        new THREE.PlaneGeometry(6, 0.4),
-        roadLineMaterial
-    );
+    const line1 = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.4), roadLineMaterial);
     line1.rotation.x = -Math.PI / 2;
     line1.position.set(i, 0.03, 0);
     scene.add(line1);
 
-    const line2 = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.4, 6),
-        roadLineMaterial
-    );
+    const line2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 6), roadLineMaterial);
     line2.rotation.x = -Math.PI / 2;
     line2.position.set(0, 0.03, i);
     scene.add(line2);
@@ -117,8 +100,6 @@ for (let i = -240; i <= 240; i += 20) {
 // ============ ЗДАНИЯ ============
 function createBuilding(x, z, width, height, depth, color) {
     const geometry = new THREE.BoxGeometry(width, height, depth);
-
-    // Основной цвет
     const material = new THREE.MeshStandardMaterial({
         color: color,
         roughness: 0.7,
@@ -131,7 +112,6 @@ function createBuilding(x, z, width, height, depth, color) {
     building.receiveShadow = true;
     scene.add(building);
 
-    // Окна (эмиссия — светятся)
     const windowMaterial = new THREE.MeshStandardMaterial({
         color: 0xffff88,
         emissive: 0xffff44,
@@ -159,21 +139,15 @@ function createBuilding(x, z, width, height, depth, color) {
     return building;
 }
 
-// Данные зданий
 const buildingsData = [
-    // Квартал 1
     { x: -25, z: -25, w: 12, h: 25, d: 12, color: 0x8B4513 },
     { x: -25, z: -10, w: 10, h: 18, d: 10, color: 0xA0522D },
     { x: -25, z:  15, w: 12, h: 22, d: 12, color: 0x8B4513 },
     { x: -25, z:  30, w: 10, h: 15, d: 10, color: 0xA0522D },
-
-    // Квартал 2
     { x:  25, z: -25, w: 12, h: 30, d: 12, color: 0x696969 },
     { x:  25, z: -10, w: 10, h: 20, d: 10, color: 0x808080 },
     { x:  25, z:  15, w: 12, h: 28, d: 12, color: 0x696969 },
     { x:  25, z:  30, w: 10, h: 16, d: 10, color: 0x808080 },
-
-    // Дальние здания
     { x: -60, z: -50, w: 15, h: 40, d: 15, color: 0x4B4B4B },
     { x:  60, z: -50, w: 15, h: 35, d: 15, color: 0x555555 },
     { x: -60, z:  50, w: 15, h: 38, d: 15, color: 0x4B4B4B },
@@ -185,7 +159,6 @@ buildingsData.forEach(b => createBuilding(b.x, b.z, b.w, b.h, b.d, b.color));
 // ============ МАШИНА ============
 const car = new THREE.Group();
 
-// Кузов
 const bodyGeom = new THREE.BoxGeometry(2, 0.7, 4);
 const bodyMat = new THREE.MeshStandardMaterial({
     color: 0xffc800,
@@ -197,7 +170,6 @@ body.position.y = 0.6;
 body.castShadow = true;
 car.add(body);
 
-// Крыша
 const roofGeom = new THREE.BoxGeometry(1.6, 0.7, 2);
 const roofMat = new THREE.MeshStandardMaterial({
     color: 0x222222,
@@ -210,7 +182,6 @@ roof.position.z = -0.2;
 roof.castShadow = true;
 car.add(roof);
 
-// Лобовое стекло
 const glassGeom = new THREE.BoxGeometry(1.5, 0.5, 0.1);
 const glassMat = new THREE.MeshStandardMaterial({
     color: 0x88ccff,
@@ -222,7 +193,6 @@ const windshield = new THREE.Mesh(glassGeom, glassMat);
 windshield.position.set(0, 1.1, 0.85);
 car.add(windshield);
 
-// Колёса
 const wheelGeom = new THREE.CylinderGeometry(0.4, 0.4, 0.35, 16);
 const wheelMat = new THREE.MeshStandardMaterial({
     color: 0x111111,
@@ -274,23 +244,19 @@ document.addEventListener('keyup', (e) => {
 
 // ============ ОБНОВЛЕНИЕ ============
 function update() {
-    // Газ / тормоз / назад
     if (keys['w'] || keys['arrowup']) {
         carState.speed += carState.accel;
     } else if (keys['s'] || keys['arrowdown']) {
         carState.speed -= carState.brake;
     }
 
-    // Ограничение скорости
     carState.speed = Math.max(
         -carState.maxSpeed / 2,
         Math.min(carState.maxSpeed, carState.speed)
     );
 
-    // Трение
     carState.speed *= carState.friction;
 
-    // Поворот (только когда машина едет)
     if (Math.abs(carState.speed) > 0.01) {
         const direction = carState.speed > 0 ? 1 : -1;
         if (keys['a'] || keys['arrowleft']) {
@@ -301,17 +267,14 @@ function update() {
         }
     }
 
-    // Движение
     car.position.x += Math.sin(carState.angle) * carState.speed;
     car.position.z += Math.cos(carState.angle) * carState.speed;
     car.rotation.y = carState.angle;
 
-    // Вращение колёс
     wheelMeshes.forEach(w => {
         w.rotation.x += carState.speed * 2;
     });
 
-    // Камера следует за машиной
     const camDist = 12;
     const camHeight = 6;
     const camTargetX = car.position.x - Math.sin(carState.angle) * camDist;
@@ -327,7 +290,6 @@ function update() {
         car.position.z + Math.cos(carState.angle) * 5
     );
 
-    // HUD — скорость
     document.getElementById('speed').textContent = Math.round(Math.abs(carState.speed) * 200);
 }
 
