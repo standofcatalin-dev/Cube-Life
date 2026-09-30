@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 1.5: Мир + Человечек
+// CUBE LIFE — Этап 2: Управление + 2 камеры
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -72,7 +72,7 @@ function createTexture(color, noise = true) {
     return texture;
 }
 
-// ============ МАТЕРИАЛЫ БЛОКОВ ============
+// ============ МАТЕРИАЛЫ ============
 
 function createGrassMaterial() {
     const topTex = createTexture('#5aad3a');
@@ -84,11 +84,6 @@ function createGrassMaterial() {
     const bottomMat = new THREE.MeshLambertMaterial({ map: bottomTex });
 
     return [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat];
-}
-
-function createDirtMaterial() {
-    const tex = createTexture('#6B4513');
-    return new THREE.MeshLambertMaterial({ map: tex });
 }
 
 function createStoneMaterial() {
@@ -106,7 +101,7 @@ function createLeafMaterial() {
     return new THREE.MeshLambertMaterial({ map: tex });
 }
 
-// ============ СОЗДАНИЕ БЛОКОВ ============
+// ============ БЛОКИ ============
 
 const BLOCK_SIZE = 1;
 const blocks = [];
@@ -120,10 +115,7 @@ function createBlock(x, y, z, material) {
     return block;
 }
 
-// ============================================================
-// МИР — пол 8×8
-// ============================================================
-
+// ============ МИР 8×8 ============
 const WORLD_SIZE = 8;
 const grassMaterial = createGrassMaterial();
 
@@ -133,13 +125,9 @@ for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
     }
 }
 
-// ============================================================
-// ПОСТРОЙКИ
-// ============================================================
-
+// ============ ПОСТРОЙКИ ============
 const stoneMaterial = createStoneMaterial();
 
-// Холм
 createBlock(2, 1, 2, stoneMaterial);
 createBlock(3, 1, 2, stoneMaterial);
 createBlock(2, 1, 3, stoneMaterial);
@@ -147,7 +135,6 @@ createBlock(3, 1, 3, stoneMaterial);
 createBlock(2, 2, 2, stoneMaterial);
 createBlock(3, 2, 2, stoneMaterial);
 
-// Дерево
 const woodMaterial = createWoodMaterial();
 const leafMaterial = createLeafMaterial();
 
@@ -163,20 +150,19 @@ createBlock(-2, 4, -3, leafMaterial);
 createBlock(-2, 5, -2, leafMaterial);
 
 // ============================================================
-// ЧЕЛОВЕЧЕК 🧍
+// ЧЕЛОВЕЧЕК
 // ============================================================
 
 function createHuman() {
     const human = new THREE.Group();
 
-    // ===== Материалы =====
-    const skinMat = new THREE.MeshLambertMaterial({ color: 0xffcc99 });      // кожа
-    const shirtMat = new THREE.MeshLambertMaterial({ color: 0x3366cc });     // синяя рубашка
-    const pantsMat = new THREE.MeshLambertMaterial({ color: 0x333366 });     // тёмно-синие штаны
-    const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });      // чёрная обувь
-    const hairMat = new THREE.MeshLambertMaterial({ color: 0x4a2c0a });      // каштановые волосы
+    const skinMat = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
+    const shirtMat = new THREE.MeshLambertMaterial({ color: 0x3366cc });
+    const pantsMat = new THREE.MeshLambertMaterial({ color: 0x333366 });
+    const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    const hairMat = new THREE.MeshLambertMaterial({ color: 0x4a2c0a });
 
-    // ===== Голова =====
+    // Голова
     const headGeom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
     const head = new THREE.Mesh(headGeom, skinMat);
     head.position.y = 1.75;
@@ -194,43 +180,39 @@ function createHuman() {
     eyeRight.position.set(0.12, 1.8, 0.26);
     human.add(eyeRight);
 
-    // Волосы (шапка сверху)
+    // Волосы
     const hairGeom = new THREE.BoxGeometry(0.52, 0.15, 0.52);
     const hair = new THREE.Mesh(hairGeom, hairMat);
     hair.position.y = 1.98;
     human.add(hair);
 
-    // ===== Тело =====
+    // Тело
     const bodyGeom = new THREE.BoxGeometry(0.55, 0.7, 0.3);
     const body = new THREE.Mesh(bodyGeom, shirtMat);
     body.position.y = 1.15;
     human.add(body);
 
-    // ===== Руки =====
+    // Руки
     const armGeom = new THREE.BoxGeometry(0.2, 0.65, 0.2);
 
-    // Левая рука
     const armLeft = new THREE.Mesh(armGeom, shirtMat);
     armLeft.position.set(-0.4, 1.15, 0);
     human.add(armLeft);
 
-    // Левая кисть
     const handGeom = new THREE.BoxGeometry(0.2, 0.15, 0.2);
     const handLeft = new THREE.Mesh(handGeom, skinMat);
     handLeft.position.set(-0.4, 0.75, 0);
     human.add(handLeft);
 
-    // Правая рука
     const armRight = new THREE.Mesh(armGeom, shirtMat);
     armRight.position.set(0.4, 1.15, 0);
     human.add(armRight);
 
-    // Правая кисть
     const handRight = new THREE.Mesh(handGeom, skinMat);
     handRight.position.set(0.4, 0.75, 0);
     human.add(handRight);
 
-    // ===== Ноги =====
+    // Ноги
     const legGeom = new THREE.BoxGeometry(0.22, 0.6, 0.22);
 
     const legLeft = new THREE.Mesh(legGeom, pantsMat);
@@ -241,7 +223,7 @@ function createHuman() {
     legRight.position.set(0.15, 0.5, 0);
     human.add(legRight);
 
-    // ===== Обувь =====
+    // Обувь
     const shoeGeom = new THREE.BoxGeometry(0.24, 0.12, 0.28);
 
     const shoeLeft = new THREE.Mesh(shoeGeom, shoeMat);
@@ -255,25 +237,37 @@ function createHuman() {
     return human;
 }
 
-// Создаём человечка и ставим в центр мира
 const human = createHuman();
-human.position.set(0, 0, 0);
+human.position.set(0, 0.5, 0);
 scene.add(human);
 
 // ============================================================
-// УПРАВЛЕНИЕ — вращение камеры
+// УПРАВЛЕНИЕ
 // ============================================================
 
 const keys = {};
-let cameraAngle = 0;
-let cameraDistance = 12;
-let cameraHeight = 7;
-const ROTATION_SPEED = 0.03;
+
+// Позиция человечка
+const player = {
+    x: 0,
+    z: 0,
+    angle: 0,        // куда смотрит человечек (радианы)
+    speed: 0.08,     // скорость движения
+    turnSpeed: 0.05  // скорость поворота
+};
+
+// Камера
+let cameraMode = 3;  // 1 = от 1-го лица, 3 = от 3-го лица
+let cameraFollowAngle = 0; // угол камеры (для 3-го лица)
 
 document.addEventListener('keydown', (e) => {
     keys[e.key.toLowerCase()] = true;
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(e.key.toLowerCase())) {
         e.preventDefault();
+    }
+    // Переключение камеры — клавиша V
+    if (e.key.toLowerCase() === 'v') {
+        toggleCamera();
     }
 });
 
@@ -290,20 +284,83 @@ function releaseKey(key) {
 window.pressKey = pressKey;
 window.releaseKey = releaseKey;
 
+function toggleCamera() {
+    cameraMode = cameraMode === 3 ? 1 : 3;
+    document.getElementById('camera-mode').textContent = cameraMode === 3 ? '3-е лицо' : '1-е лицо';
+}
+window.toggleCamera = toggleCamera;
+
 // ============ ОБНОВЛЕНИЕ ============
 function update() {
-    if (keys['left'] || keys['arrowleft']) {
-        cameraAngle += ROTATION_SPEED;
+    // Поворот человечка (A/D)
+    if (keys['a'] || keys['arrowleft']) {
+        player.angle += player.turnSpeed;
     }
-    if (keys['right'] || keys['arrowright']) {
-        cameraAngle -= ROTATION_SPEED;
+    if (keys['d'] || keys['arrowright']) {
+        player.angle -= player.turnSpeed;
     }
 
-    camera.position.x = Math.sin(cameraAngle) * cameraDistance;
-    camera.position.z = Math.cos(cameraAngle) * cameraDistance;
-    camera.position.y = cameraHeight;
+    // Движение вперёд/назад (W/S)
+    if (keys['w'] || keys['arrowup']) {
+        player.x += Math.sin(player.angle) * player.speed;
+        player.z += Math.cos(player.angle) * player.speed;
+    }
+    if (keys['s'] || keys['arrowdown']) {
+        player.x -= Math.sin(player.angle) * player.speed;
+        player.z -= Math.cos(player.angle) * player.speed;
+    }
 
-    camera.lookAt(0, 1, 0);
+    // Границы мира (не выходим за поляну)
+    const limit = WORLD_SIZE / 2 - 0.5;
+    player.x = Math.max(-limit, Math.min(limit, player.x));
+    player.z = Math.max(-limit, Math.min(limit, player.z));
+
+    // Применяем к человечку
+    human.position.x = player.x;
+    human.position.z = player.z;
+    human.rotation.y = player.angle;
+
+    // ============ КАМЕРА ============
+    if (cameraMode === 3) {
+        // === 3-Е ЛИЦО ===
+        // Камера крутится вокруг человечка
+        if (keys['left']) cameraFollowAngle += 0.03;
+        if (keys['right']) cameraFollowAngle -= 0.03;
+        
+        // Камера всегда за человечком + ручное вращение
+        const totalAngle = player.angle + cameraFollowAngle;
+        const camDist = 6;
+        const camHeight = 4;
+        
+        const targetX = player.x - Math.sin(totalAngle) * camDist;
+        const targetZ = player.z - Math.cos(totalAngle) * camDist;
+        const targetY = camHeight;
+        
+        camera.position.x += (targetX - camera.position.x) * 0.15;
+        camera.position.z += (targetZ - camera.position.z) * 0.15;
+        camera.position.y += (targetY - camera.position.y) * 0.15;
+        
+        camera.lookAt(player.x, 1.2, player.z);
+        
+        // Показываем человечка
+        human.visible = true;
+    } else {
+        // === 1-Е ЛИЦО ===
+        // Камера на уровне глаз человечка
+        camera.position.x = player.x;
+        camera.position.z = player.z;
+        camera.position.y = 1.75;
+        
+        // Смотрим туда, куда смотрит человечек
+        camera.lookAt(
+            player.x + Math.sin(player.angle) * 5,
+            1.75,
+            player.z + Math.cos(player.angle) * 5
+        );
+        
+        // Скрываем человечка (чтобы не мешал обзору)
+        human.visible = false;
+    }
 }
 
 // ============ ЦИКЛ ============
