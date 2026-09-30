@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 2: Управление + 2 камеры
+// CUBE LIFE — Этап 2.1: Управление мышью + 2 камеры
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -251,21 +251,22 @@ const keys = {};
 const player = {
     x: 0,
     z: 0,
-    angle: 0,        // куда смотрит человечек (радианы)
-    speed: 0.08,     // скорость движения
-    turnSpeed: 0.05  // скорость поворота
+    angle: 0,
+    speed: 0.08,
+    turnSpeed: 0.05
 };
 
 // Камера
-let cameraMode = 3;  // 1 = от 1-го лица, 3 = от 3-го лица
-let cameraFollowAngle = 0; // угол камеры (для 3-го лица)
+let cameraMode = 3;              // 1 = от 1-го лица, 3 = от 3-го лица
+let cameraFollowAngle = 0;       // угол камеры для 3-го лица
+let cameraPitchAngle = 0;        // вертикальный наклон камеры
 
+// ============ КЛАВИАТУРА ============
 document.addEventListener('keydown', (e) => {
     keys[e.key.toLowerCase()] = true;
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(e.key.toLowerCase())) {
         e.preventDefault();
     }
-    // Переключение камеры — клавиша V
     if (e.key.toLowerCase() === 'v') {
         toggleCamera();
     }
@@ -286,9 +287,72 @@ window.releaseKey = releaseKey;
 
 function toggleCamera() {
     cameraMode = cameraMode === 3 ? 1 : 3;
-    document.getElementById('camera-mode').textContent = cameraMode === 3 ? '3-е лицо' : '1-е лицо';
+    document.getElementById('camera-mode').textContent =
+        cameraMode === 3 ? '3-е лицо' : '1-е лицо';
 }
 window.toggleCamera = toggleCamera;
+
+// ============ МЫШЬ — вращение камеры ============
+let isMouseDown = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+
+canvas.addEventListener('mousedown', (e) => {
+    isMouseDown = true;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+});
+
+document.addEventListener('mouseup', () => {
+    isMouseDown = false;
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isMouseDown) return;
+
+    const deltaX = e.clientX - lastMouseX;
+    const deltaY = e.clientY - lastMouseY;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+
+    if (cameraMode === 3) {
+        // 3-е лицо: вращаем камеру вокруг человечка
+        cameraFollowAngle -= deltaX * 0.01;
+        cameraPitchAngle -= deltaY * 0.01;
+        cameraPitchAngle = Math.max(-0.3, Math.min(0.8, cameraPitchAngle));
+    } else {
+        // 1-е лицо: поворачиваем самого человечка
+        player.angle -= deltaX * 0.01;
+    }
+});
+
+// ============ ТАЧ (телефон) ============
+let lastTouchX = 0;
+let lastTouchY = 0;
+
+canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+    }
+}, { passive: true });
+
+canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length !== 1) return;
+
+    const deltaX = e.touches[0].clientX - lastTouchX;
+    const deltaY = e.touches[0].clientY - lastTouchY;
+    lastTouchX = e.touches[0].clientX;
+    lastTouchY = e.touches[0].clientY;
+
+    if (cameraMode === 3) {
+        cameraFollowAngle -= deltaX * 0.01;
+        cameraPitchAngle -= deltaY * 0.01;
+        cameraPitchAngle = Math.max(-0.3, Math.min(0.8, cameraPitchAngle));
+    } else {
+        player.angle -= deltaX * 0.01;
+    }
+}, { passive: true });
 
 // ============ ОБНОВЛЕНИЕ ============
 function update() {
@@ -310,7 +374,7 @@ function update() {
         player.z -= Math.cos(player.angle) * player.speed;
     }
 
-    // Границы мира (не выходим за поляну)
+    // Границы мира
     const limit = WORLD_SIZE / 2 - 0.5;
     player.x = Math.max(-limit, Math.min(limit, player.x));
     player.z = Math.max(-limit, Math.min(limit, player.z));
@@ -323,42 +387,36 @@ function update() {
     // ============ КАМЕРА ============
     if (cameraMode === 3) {
         // === 3-Е ЛИЦО ===
-        // Камера крутится вокруг человечка
         if (keys['left']) cameraFollowAngle += 0.03;
         if (keys['right']) cameraFollowAngle -= 0.03;
-        
-        // Камера всегда за человечком + ручное вращение
+
         const totalAngle = player.angle + cameraFollowAngle;
         const camDist = 6;
-        const camHeight = 4;
-        
+        const baseHeight = 4;
+        const camHeight = baseHeight + cameraPitchAngle * 4;
+
         const targetX = player.x - Math.sin(totalAngle) * camDist;
         const targetZ = player.z - Math.cos(totalAngle) * camDist;
         const targetY = camHeight;
-        
+
         camera.position.x += (targetX - camera.position.x) * 0.15;
         camera.position.z += (targetZ - camera.position.z) * 0.15;
         camera.position.y += (targetY - camera.position.y) * 0.15;
-        
+
         camera.lookAt(player.x, 1.2, player.z);
-        
-        // Показываем человечка
         human.visible = true;
     } else {
         // === 1-Е ЛИЦО ===
-        // Камера на уровне глаз человечка
         camera.position.x = player.x;
         camera.position.z = player.z;
         camera.position.y = 1.75;
-        
-        // Смотрим туда, куда смотрит человечек
+
         camera.lookAt(
             player.x + Math.sin(player.angle) * 5,
             1.75,
             player.z + Math.cos(player.angle) * 5
         );
-        
-        // Скрываем человечка (чтобы не мешал обзору)
+
         human.visible = false;
     }
 }
