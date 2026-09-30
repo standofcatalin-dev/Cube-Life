@@ -12,12 +12,27 @@
         <canvas id="game-canvas"></canvas>
 
         <div id="hud">
-            <div class="hud-item">🚗 Скорость: <span id="speed">0</span> км/ч</div>
-            <div class="hud-item">⭐ Розыск: <span id="wanted">0</span></div>
+            <div class="hud-item">🚗 <span id="speed">0</span> км/ч</div>
+            <div class="hud-item">⭐ <span id="wanted">0</span></div>
         </div>
 
-        <div id="controls">
-            <div class="control-hint">WASD или стрелки — управление</div>
+        <div id="mobile-controls">
+            <div class="controls-left">
+                <button class="ctrl-btn" 
+                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')"
+                        onmousedown="pressKey('a')" onmouseup="releaseKey('a')">◀</button>
+                <button class="ctrl-btn" 
+                        ontouchstart="pressKey('d')" ontouchend="releaseKey('d')"
+                        onmousedown="pressKey('d')" onmouseup="releaseKey('d')">▶</button>
+            </div>
+            <div class="controls-right">
+                <button class="ctrl-btn" 
+                        ontouchstart="pressKey('s')" ontouchend="releaseKey('s')"
+                        onmousedown="pressKey('s')" onmouseup="releaseKey('s')">▼</button>
+                <button class="ctrl-btn gas" 
+                        ontouchstart="pressKey('w')" ontouchend="releaseKey('w')"
+                        onmousedown="pressKey('w')" onmouseup="releaseKey('w')">▲</button>
+            </div>
         </div>
     </div>
 
