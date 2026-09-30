@@ -13,21 +13,36 @@
 
         <div id="hud">
             <div class="hud-title">⬛ CUBE LIFE</div>
-            <div class="hud-info">🌍 Мир: <span id="world-info">1 блок</span></div>
+            <div class="hud-right">
+                <div class="hud-info">🌍 <span id="world-info">0</span> блоков</div>
+                <div class="hud-info">📷 <span id="camera-mode">3-е лицо</span></div>
+            </div>
         </div>
 
+        <!-- Кнопка смены камеры -->
+        <button id="camera-btn" onclick="toggleCamera()">📷</button>
+
+        <!-- Управление -->
         <div id="controls">
-            <button class="ctrl-btn" 
-                    ontouchstart="pressKey('left')" ontouchend="releaseKey('left')"
-                    onmousedown="pressKey('left')" onmouseup="releaseKey('left')">◀</button>
-            <button class="ctrl-btn" 
-                    ontouchstart="pressKey('right')" ontouchend="releaseKey('right')"
-                    onmousedown="pressKey('right')" onmouseup="releaseKey('right')">▶</button>
+            <div class="controls-left">
+                <button class="ctrl-btn" 
+                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')"
+                        onmousedown="pressKey('a')" onmouseup="releaseKey('a')">◀</button>
+                <button class="ctrl-btn" 
+                        ontouchstart="pressKey('d')" ontouchend="releaseKey('d')"
+                        onmousedown="pressKey('d')" onmouseup="releaseKey('d')">▶</button>
+            </div>
+            <div class="controls-right">
+                <button class="ctrl-btn" 
+                        ontouchstart="pressKey('s')" ontouchend="releaseKey('s')"
+                        onmousedown="pressKey('s')" onmouseup="releaseKey('s')">▼</button>
+                <button class="ctrl-btn gas" 
+                        ontouchstart="pressKey('w')" ontouchend="releaseKey('w')"
+                        onmousedown="pressKey('w')" onmouseup="releaseKey('w')">▲</button>
+            </div>
         </div>
 
-        <div id="hint">
-            ← → вращать камеру • WASD (в след. версии)
-        </div>
+        <div id="hint">WASD — движение • V — смена камеры</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
