@@ -5,19 +5,27 @@
     overflow: hidden;
 }
 
-body {
+html, body {
+    width: 100%;
+    height: 100%;
     background: #000;
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     color: white;
-    height: 100vh;
     user-select: none;
     -webkit-user-select: none;
 }
 
-#game-canvas {
-    display: block;
+#game-container {
+    position: fixed;
+    inset: 0;
     width: 100vw;
     height: 100vh;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 #hud {
