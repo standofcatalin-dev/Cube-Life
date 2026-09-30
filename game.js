@@ -253,7 +253,7 @@ const player = {
     z: 0,
     angle: 0,
     speed: 0.08,
-    turnSpeed: 0.05
+    turnSpeed: 0.05 
 };
 
 // Камера
