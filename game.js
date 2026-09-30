@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 1: 3D-сцена с блоками
+// CUBE LIFE — Этап 1.5: Мир + Человечек
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -41,7 +41,7 @@ sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
 // ============================================================
-// ТЕКСТУРЫ (процедурные — через canvas)
+// ТЕКСТУРЫ
 // ============================================================
 
 function createTexture(color, noise = true) {
@@ -51,11 +51,9 @@ function createTexture(color, noise = true) {
     canvas2.height = size;
     const ctx = canvas2.getContext('2d');
 
-    // Базовый цвет
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, size, size);
 
-    // Шум для текстуры
     if (noise) {
         const imageData = ctx.getImageData(0, 0, size, size);
         const data = imageData.data;
@@ -76,7 +74,6 @@ function createTexture(color, noise = true) {
 
 // ============ МАТЕРИАЛЫ БЛОКОВ ============
 
-// Трава (верх — зелёный, бока — коричневый)
 function createGrassMaterial() {
     const topTex = createTexture('#5aad3a');
     const sideTex = createTexture('#8B6535');
@@ -86,29 +83,24 @@ function createGrassMaterial() {
     const sideMat = new THREE.MeshLambertMaterial({ map: sideTex });
     const bottomMat = new THREE.MeshLambertMaterial({ map: bottomTex });
 
-    // Порядок: +X, -X, +Y, -Y, +Z, -Z
     return [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat];
 }
 
-// Земля (коричневая)
 function createDirtMaterial() {
     const tex = createTexture('#6B4513');
     return new THREE.MeshLambertMaterial({ map: tex });
 }
 
-// Камень (серый)
 function createStoneMaterial() {
     const tex = createTexture('#808080');
     return new THREE.MeshLambertMaterial({ map: tex });
 }
 
-// Дерево (ствол)
 function createWoodMaterial() {
     const tex = createTexture('#6B4423');
     return new THREE.MeshLambertMaterial({ map: tex });
 }
 
-// Листья (тёмно-зелёные)
 function createLeafMaterial() {
     const tex = createTexture('#2d5a1e');
     return new THREE.MeshLambertMaterial({ map: tex });
@@ -129,7 +121,7 @@ function createBlock(x, y, z, material) {
 }
 
 // ============================================================
-// МИР — пол 8×8 блоков
+// МИР — пол 8×8
 // ============================================================
 
 const WORLD_SIZE = 8;
@@ -145,8 +137,9 @@ for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
 // ПОСТРОЙКИ
 // ============================================================
 
-// ---- Небольшой холм из камня ----
 const stoneMaterial = createStoneMaterial();
+
+// Холм
 createBlock(2, 1, 2, stoneMaterial);
 createBlock(3, 1, 2, stoneMaterial);
 createBlock(2, 1, 3, stoneMaterial);
@@ -154,16 +147,14 @@ createBlock(3, 1, 3, stoneMaterial);
 createBlock(2, 2, 2, stoneMaterial);
 createBlock(3, 2, 2, stoneMaterial);
 
-// ---- Дерево ----
+// Дерево
 const woodMaterial = createWoodMaterial();
 const leafMaterial = createLeafMaterial();
 
-// Ствол
 createBlock(-2, 1, -2, woodMaterial);
 createBlock(-2, 2, -2, woodMaterial);
 createBlock(-2, 3, -2, woodMaterial);
 
-// Листва (крест из блоков)
 createBlock(-2, 4, -2, leafMaterial);
 createBlock(-1, 4, -2, leafMaterial);
 createBlock(-3, 4, -2, leafMaterial);
@@ -171,22 +162,112 @@ createBlock(-2, 4, -1, leafMaterial);
 createBlock(-2, 4, -3, leafMaterial);
 createBlock(-2, 5, -2, leafMaterial);
 
-// ---- Каменная пирамидка ----
-createBlock(0, 1, 4, stoneMaterial);
-createBlock(1, 1, 4, stoneMaterial);
-createBlock(-1, 1, 4, stoneMaterial);
-createBlock(0, 2, 4, stoneMaterial);
+// ============================================================
+// ЧЕЛОВЕЧЕК 🧍
+// ============================================================
+
+function createHuman() {
+    const human = new THREE.Group();
+
+    // ===== Материалы =====
+    const skinMat = new THREE.MeshLambertMaterial({ color: 0xffcc99 });      // кожа
+    const shirtMat = new THREE.MeshLambertMaterial({ color: 0x3366cc });     // синяя рубашка
+    const pantsMat = new THREE.MeshLambertMaterial({ color: 0x333366 });     // тёмно-синие штаны
+    const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });      // чёрная обувь
+    const hairMat = new THREE.MeshLambertMaterial({ color: 0x4a2c0a });      // каштановые волосы
+
+    // ===== Голова =====
+    const headGeom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+    const head = new THREE.Mesh(headGeom, skinMat);
+    head.position.y = 1.75;
+    human.add(head);
+
+    // Глаза
+    const eyeGeom = new THREE.BoxGeometry(0.1, 0.1, 0.05);
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+    const eyeLeft = new THREE.Mesh(eyeGeom, eyeMat);
+    eyeLeft.position.set(-0.12, 1.8, 0.26);
+    human.add(eyeLeft);
+
+    const eyeRight = new THREE.Mesh(eyeGeom, eyeMat);
+    eyeRight.position.set(0.12, 1.8, 0.26);
+    human.add(eyeRight);
+
+    // Волосы (шапка сверху)
+    const hairGeom = new THREE.BoxGeometry(0.52, 0.15, 0.52);
+    const hair = new THREE.Mesh(hairGeom, hairMat);
+    hair.position.y = 1.98;
+    human.add(hair);
+
+    // ===== Тело =====
+    const bodyGeom = new THREE.BoxGeometry(0.55, 0.7, 0.3);
+    const body = new THREE.Mesh(bodyGeom, shirtMat);
+    body.position.y = 1.15;
+    human.add(body);
+
+    // ===== Руки =====
+    const armGeom = new THREE.BoxGeometry(0.2, 0.65, 0.2);
+
+    // Левая рука
+    const armLeft = new THREE.Mesh(armGeom, shirtMat);
+    armLeft.position.set(-0.4, 1.15, 0);
+    human.add(armLeft);
+
+    // Левая кисть
+    const handGeom = new THREE.BoxGeometry(0.2, 0.15, 0.2);
+    const handLeft = new THREE.Mesh(handGeom, skinMat);
+    handLeft.position.set(-0.4, 0.75, 0);
+    human.add(handLeft);
+
+    // Правая рука
+    const armRight = new THREE.Mesh(armGeom, shirtMat);
+    armRight.position.set(0.4, 1.15, 0);
+    human.add(armRight);
+
+    // Правая кисть
+    const handRight = new THREE.Mesh(handGeom, skinMat);
+    handRight.position.set(0.4, 0.75, 0);
+    human.add(handRight);
+
+    // ===== Ноги =====
+    const legGeom = new THREE.BoxGeometry(0.22, 0.6, 0.22);
+
+    const legLeft = new THREE.Mesh(legGeom, pantsMat);
+    legLeft.position.set(-0.15, 0.5, 0);
+    human.add(legLeft);
+
+    const legRight = new THREE.Mesh(legGeom, pantsMat);
+    legRight.position.set(0.15, 0.5, 0);
+    human.add(legRight);
+
+    // ===== Обувь =====
+    const shoeGeom = new THREE.BoxGeometry(0.24, 0.12, 0.28);
+
+    const shoeLeft = new THREE.Mesh(shoeGeom, shoeMat);
+    shoeLeft.position.set(-0.15, 0.14, 0.02);
+    human.add(shoeLeft);
+
+    const shoeRight = new THREE.Mesh(shoeGeom, shoeMat);
+    shoeRight.position.set(0.15, 0.14, 0.02);
+    human.add(shoeRight);
+
+    return human;
+}
+
+// Создаём человечка и ставим в центр мира
+const human = createHuman();
+human.position.set(0, 0, 0);
+scene.add(human);
 
 // ============================================================
 // УПРАВЛЕНИЕ — вращение камеры
 // ============================================================
 
 const keys = {};
-let cameraAngle = 0;         // горизонтальное вращение
-let cameraDistance = 12;     // расстояние от центра
-let cameraHeight = 8;        // высота
-let cameraPitch = -0.6;      // наклон вниз
-
+let cameraAngle = 0;
+let cameraDistance = 12;
+let cameraHeight = 7;
 const ROTATION_SPEED = 0.03;
 
 document.addEventListener('keydown', (e) => {
@@ -209,9 +290,8 @@ function releaseKey(key) {
 window.pressKey = pressKey;
 window.releaseKey = releaseKey;
 
-// ============ ОБНОВЛЕНИЕ КАМЕРЫ ============
+// ============ ОБНОВЛЕНИЕ ============
 function update() {
-    // Вращение камеры
     if (keys['left'] || keys['arrowleft']) {
         cameraAngle += ROTATION_SPEED;
     }
@@ -219,12 +299,10 @@ function update() {
         cameraAngle -= ROTATION_SPEED;
     }
 
-    // Позиция камеры — круг вокруг центра мира
     camera.position.x = Math.sin(cameraAngle) * cameraDistance;
     camera.position.z = Math.cos(cameraAngle) * cameraDistance;
     camera.position.y = cameraHeight;
 
-    // Камера смотрит в центр мира (примерно)
     camera.lookAt(0, 1, 0);
 }
 
