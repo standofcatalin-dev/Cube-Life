@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 2.1: Управление мышью + 2 камеры
+// CUBE LIFE — Этап 2.2: Pointer Lock (захват мыши) + камеры
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -253,7 +253,7 @@ const player = {
     z: 0,
     angle: 0,
     speed: 0.08,
-    turnSpeed: 0.05 
+    turnSpeed: 0.05
 };
 
 // Камера
@@ -261,19 +261,28 @@ let cameraMode = 3;              // 1 = от 1-го лица, 3 = от 3-го л
 let cameraFollowAngle = 0;       // угол камеры для 3-го лица
 let cameraPitchAngle = 0;        // вертикальный наклон камеры
 
-// ============ КЛАВИАТУРА ============
+// ============ КЛАВИАТУРА (с поддержкой русской раскладки) ============
+const KEY_MAP = {
+    'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v'
+};
+
 document.addEventListener('keydown', (e) => {
-    keys[e.key.toLowerCase()] = true;
-    if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(e.key.toLowerCase())) {
+    const key = e.key.toLowerCase();
+    const normalizedKey = KEY_MAP[key] || key;
+    keys[normalizedKey] = true;
+
+    if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(key)) {
         e.preventDefault();
     }
-    if (e.key.toLowerCase() === 'v') {
+    if (normalizedKey === 'v') {
         toggleCamera();
     }
 });
 
 document.addEventListener('keyup', (e) => {
-    keys[e.key.toLowerCase()] = false;
+    const key = e.key.toLowerCase();
+    const normalizedKey = KEY_MAP[key] || key;
+    keys[normalizedKey] = false;
 });
 
 function pressKey(key) {
@@ -292,37 +301,35 @@ function toggleCamera() {
 }
 window.toggleCamera = toggleCamera;
 
-// ============ МЫШЬ — вращение камеры ============
-let isMouseDown = false;
-let lastMouseX = 0;
-let lastMouseY = 0;
+// ============ МЫШЬ — POINTER LOCK ============
+let isPointerLocked = false;
 
-canvas.addEventListener('mousedown', (e) => {
-    isMouseDown = true;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
+canvas.addEventListener('click', () => {
+    if (!isPointerLocked) {
+        canvas.requestPointerLock();
+    }
 });
 
-document.addEventListener('mouseup', () => {
-    isMouseDown = false;
+document.addEventListener('pointerlockchange', () => {
+    isPointerLocked = document.pointerLockElement === canvas;
 });
 
 document.addEventListener('mousemove', (e) => {
-    if (!isMouseDown) return;
+    if (!isPointerLocked) return;
 
-    const deltaX = e.clientX - lastMouseX;
-    const deltaY = e.clientY - lastMouseY;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
+    const deltaX = e.movementX;
+    const deltaY = e.movementY;
 
     if (cameraMode === 3) {
         // 3-е лицо: вращаем камеру вокруг человечка
-        cameraFollowAngle -= deltaX * 0.01;
-        cameraPitchAngle -= deltaY * 0.01;
-        cameraPitchAngle = Math.max(-0.3, Math.min(0.8, cameraPitchAngle));
+        cameraFollowAngle -= deltaX * 0.003;
+        cameraPitchAngle -= deltaY * 0.003;
+        cameraPitchAngle = Math.max(-0.3, Math.min(1.2, cameraPitchAngle));
     } else {
-        // 1-е лицо: поворачиваем самого человечка
-        player.angle -= deltaX * 0.01;
+        // 1-е лицо: поворачиваем человечка + смотрим вверх/вниз
+        player.angle -= deltaX * 0.003;
+        cameraPitchAngle -= deltaY * 0.003;
+        cameraPitchAngle = Math.max(-0.8, Math.min(0.8, cameraPitchAngle));
     }
 });
 
@@ -348,7 +355,7 @@ canvas.addEventListener('touchmove', (e) => {
     if (cameraMode === 3) {
         cameraFollowAngle -= deltaX * 0.01;
         cameraPitchAngle -= deltaY * 0.01;
-        cameraPitchAngle = Math.max(-0.3, Math.min(0.8, cameraPitchAngle));
+        cameraPitchAngle = Math.max(-0.3, Math.min(1.2, cameraPitchAngle));
     } else {
         player.angle -= deltaX * 0.01;
     }
@@ -392,8 +399,8 @@ function update() {
 
         const totalAngle = player.angle + cameraFollowAngle;
         const camDist = 6;
-        const baseHeight = 4;
-        const camHeight = baseHeight + cameraPitchAngle * 4;
+        const baseHeight = 4 + cameraPitchAngle * 3;
+        const camHeight = Math.max(0.5, baseHeight);
 
         const targetX = player.x - Math.sin(totalAngle) * camDist;
         const targetZ = player.z - Math.cos(totalAngle) * camDist;
@@ -411,12 +418,11 @@ function update() {
         camera.position.z = player.z;
         camera.position.y = 1.75;
 
-        camera.lookAt(
-            player.x + Math.sin(player.angle) * 5,
-            1.75,
-            player.z + Math.cos(player.angle) * 5
-        );
+        const lookX = player.x + Math.sin(player.angle) * 5;
+        const lookZ = player.z + Math.cos(player.angle) * 5;
+        const lookY = 1.75 + cameraPitchAngle * 4;
 
+        camera.lookAt(lookX, lookY, lookZ);
         human.visible = false;
     }
 }
