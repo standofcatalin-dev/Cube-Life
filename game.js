@@ -1,5 +1,5 @@
 // ============================================================
-// CRA 3D — Этап 2: Реалистичная физика + детализация
+// CUBE LIFE — Этап 1: 3D-сцена с блоками
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -13,16 +13,15 @@ const canvas = document.getElementById('game-canvas');
 // ============ СЦЕНА ============
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB);
-scene.fog = new THREE.Fog(0x87CEEB, 60, 200);
+scene.fog = new THREE.Fog(0x87CEEB, 30, 80);
 
 // ============ КАМЕРА ============
 const camera = new THREE.PerspectiveCamera(
     70,
     window.innerWidth / window.innerHeight,
-    0.5,
+    0.1,
     500
 );
-camera.position.set(0, 15, 20);
 
 // ============ РЕНДЕРЕР ============
 const renderer = new THREE.WebGLRenderer({
@@ -32,275 +31,167 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(1);
-renderer.shadowMap.enabled = false;
 
 // ============ ОСВЕЩЕНИЕ ============
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
 scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+const sunLight = new THREE.DirectionalLight(0xffffff, 0.7);
 sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
-// ============ ЗЕМЛЯ ============
-const groundGeometry = new THREE.PlaneGeometry(500, 500);
-const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x2a2a2a });
-const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
-
-// ============ ДОРОГИ ============
-const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x111111 });
-const roadLineMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
-
-const road1 = new THREE.Mesh(new THREE.PlaneGeometry(400, 10), roadMaterial);
-road1.rotation.x = -Math.PI / 2;
-road1.position.y = 0.02;
-scene.add(road1);
-
-const road2 = new THREE.Mesh(new THREE.PlaneGeometry(10, 400), roadMaterial);
-road2.rotation.x = -Math.PI / 2;
-road2.position.y = 0.02;
-scene.add(road2);
-
-for (let i = -180; i <= 180; i += 30) {
-    const l1 = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.4), roadLineMaterial);
-    l1.rotation.x = -Math.PI / 2;
-    l1.position.set(i, 0.03, 0);
-    scene.add(l1);
-
-    const l2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 6), roadLineMaterial);
-    l2.rotation.x = -Math.PI / 2;
-    l2.position.set(0, 0.03, i);
-    scene.add(l2);
-}
-
-// ============ ЗДАНИЯ ============
-function createBuilding(x, z, width, height, depth, color) {
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshLambertMaterial({ color: color });
-    const building = new THREE.Mesh(geometry, material);
-    building.position.set(x, height / 2, z);
-    scene.add(building);
-}
-
-const buildingsData = [
-    { x: -25, z: -25, w: 12, h: 25, d: 12, color: 0x8B4513 },
-    { x: -25, z:  20, w: 12, h: 20, d: 12, color: 0xA0522D },
-    { x:  25, z: -25, w: 12, h: 30, d: 12, color: 0x696969 },
-    { x:  25, z:  20, w: 12, h: 22, d: 12, color: 0x808080 },
-    { x: -55, z:  0,  w: 15, h: 40, d: 15, color: 0x4B4B4B },
-    { x:  55, z:  0,  w: 15, h: 35, d: 15, color: 0x555555 },
-];
-
-buildingsData.forEach(b => createBuilding(b.x, b.z, b.w, b.h, b.d, b.color));
-
 // ============================================================
-// МАШИНА — РЕАЛИСТИЧНАЯ
+// ТЕКСТУРЫ (процедурные — через canvas)
 // ============================================================
 
-const car = new THREE.Group();
+function createTexture(color, noise = true) {
+    const size = 64;
+    const canvas2 = document.createElement('canvas');
+    canvas2.width = size;
+    canvas2.height = size;
+    const ctx = canvas2.getContext('2d');
 
-// Внутренняя группа для визуальных наклонов
-const carBody = new THREE.Group();
-car.add(carBody);
+    // Базовый цвет
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, size, size);
 
-// ---- Основной кузов ----
-const bodyGeom = new THREE.BoxGeometry(2, 0.5, 4.2);
-const bodyMat = new THREE.MeshLambertMaterial({ color: 0xffc800 });
-const body = new THREE.Mesh(bodyGeom, bodyMat);
-body.position.y = 0.55;
-carBody.add(body);
+    // Шум для текстуры
+    if (noise) {
+        const imageData = ctx.getImageData(0, 0, size, size);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const variance = (Math.random() - 0.5) * 30;
+            data[i] = Math.max(0, Math.min(255, data[i] + variance));
+            data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + variance));
+            data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + variance));
+        }
+        ctx.putImageData(imageData, 0, 0);
+    }
 
-// ---- Капот ----
-const hoodGeom = new THREE.BoxGeometry(1.9, 0.3, 1.2);
-const hoodMat = new THREE.MeshLambertMaterial({ color: 0xffc800 });
-const hood = new THREE.Mesh(hoodGeom, hoodMat);
-hood.position.set(0, 0.65, 1.55);
-carBody.add(hood);
-
-// ---- Багажник ----
-const trunkGeom = new THREE.BoxGeometry(1.9, 0.35, 1.0);
-const trunkMat = new THREE.MeshLambertMaterial({ color: 0xffc800 });
-const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-trunk.position.set(0, 0.68, -1.65);
-carBody.add(trunk);
-
-// ---- Крыша (кабина) ----
-const cabinGeom = new THREE.BoxGeometry(1.7, 0.7, 2.0);
-const cabinMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-const cabin = new THREE.Mesh(cabinGeom, cabinMat);
-cabin.position.set(0, 1.15, -0.15);
-carBody.add(cabin);
-
-// ---- Стёкла ----
-const glassMat = new THREE.MeshBasicMaterial({
-    color: 0x88ccff,
-    transparent: true,
-    opacity: 0.7
-});
-
-const windshieldGeom = new THREE.BoxGeometry(1.6, 0.55, 0.05);
-const windshield = new THREE.Mesh(windshieldGeom, glassMat);
-windshield.position.set(0, 1.15, 0.9);
-windshield.rotation.x = -0.35;
-carBody.add(windshield);
-
-const rearGlassGeom = new THREE.BoxGeometry(1.6, 0.5, 0.05);
-const rearGlass = new THREE.Mesh(rearGlassGeom, glassMat);
-rearGlass.position.set(0, 1.15, -1.2);
-rearGlass.rotation.x = 0.3;
-carBody.add(rearGlass);
-
-const sideGlassGeom = new THREE.BoxGeometry(0.05, 0.45, 1.6);
-const sideGlassLeft = new THREE.Mesh(sideGlassGeom, glassMat);
-sideGlassLeft.position.set(-0.88, 1.15, -0.15);
-carBody.add(sideGlassLeft);
-
-const sideGlassRight = new THREE.Mesh(sideGlassGeom, glassMat);
-sideGlassRight.position.set(0.88, 1.15, -0.15);
-carBody.add(sideGlassRight);
-
-// ---- Фары передние ----
-const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
-const headlight1Geom = new THREE.BoxGeometry(0.4, 0.2, 0.1);
-
-const headlight1 = new THREE.Mesh(headlight1Geom, headlightMat);
-headlight1.position.set(-0.65, 0.65, 2.16);
-carBody.add(headlight1);
-
-const headlight2 = new THREE.Mesh(headlight1Geom, headlightMat);
-headlight2.position.set(0.65, 0.65, 2.16);
-carBody.add(headlight2);
-
-// ---- Фонари задние ----
-const taillightMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
-const taillight1Geom = new THREE.BoxGeometry(0.4, 0.2, 0.1);
-
-const taillight1 = new THREE.Mesh(taillight1Geom, taillightMat);
-taillight1.position.set(-0.65, 0.68, -2.16);
-carBody.add(taillight1);
-
-const taillight2 = new THREE.Mesh(taillight1Geom, taillightMat);
-taillight2.position.set(0.65, 0.68, -2.16);
-carBody.add(taillight2);
-
-// ---- Зеркала ----
-const mirrorMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
-const mirrorGeom = new THREE.BoxGeometry(0.2, 0.15, 0.15);
-
-const mirrorLeft = new THREE.Mesh(mirrorGeom, mirrorMat);
-mirrorLeft.position.set(-1.0, 1.05, 0.85);
-carBody.add(mirrorLeft);
-
-const mirrorRight = new THREE.Mesh(mirrorGeom, mirrorMat);
-mirrorRight.position.set(1.0, 1.05, 0.85);
-carBody.add(mirrorRight);
-
-// ---- Бамперы ----
-const bumperMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
-const frontBumperGeom = new THREE.BoxGeometry(2.1, 0.25, 0.15);
-
-const frontBumper = new THREE.Mesh(frontBumperGeom, bumperMat);
-frontBumper.position.set(0, 0.4, 2.15);
-carBody.add(frontBumper);
-
-const rearBumper = new THREE.Mesh(frontBumperGeom, bumperMat);
-rearBumper.position.set(0, 0.4, -2.15);
-carBody.add(rearBumper);
-
-// ---- Номера ----
-const plateMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-const plateGeom = new THREE.BoxGeometry(0.6, 0.15, 0.03);
-
-const plateFront = new THREE.Mesh(plateGeom, plateMat);
-plateFront.position.set(0, 0.35, 2.24);
-carBody.add(plateFront);
-
-const plateRear = new THREE.Mesh(plateGeom, plateMat);
-plateRear.position.set(0, 0.35, -2.24);
-carBody.add(plateRear);
-
-// ---- Колёса ----
-const wheelGeom = new THREE.CylinderGeometry(0.42, 0.42, 0.35, 12);
-const wheelMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
-
-const rimGeom = new THREE.CylinderGeometry(0.22, 0.22, 0.37, 8);
-const rimMat = new THREE.MeshLambertMaterial({ color: 0xcccccc });
-
-const wheelFL = new THREE.Group();
-const wheelFR = new THREE.Group();
-const wheelRL = new THREE.Group();
-const wheelRR = new THREE.Group();
-
-wheelFL.position.set(-1.05, 0.42, 1.35);
-wheelFR.position.set( 1.05, 0.42, 1.35);
-wheelRL.position.set(-1.05, 0.42, -1.35);
-wheelRR.position.set( 1.05, 0.42, -1.35);
-
-function createWheel() {
-    const wheelGroup = new THREE.Group();
-    
-    const wheel = new THREE.Mesh(wheelGeom, wheelMat);
-    wheel.rotation.z = Math.PI / 2;
-    wheelGroup.add(wheel);
-    
-    const rim = new THREE.Mesh(rimGeom, rimMat);
-    rim.rotation.z = Math.PI / 2;
-    wheelGroup.add(rim);
-    
-    return wheelGroup;
+    const texture = new THREE.CanvasTexture(canvas2);
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    return texture;
 }
 
-wheelFL.add(createWheel());
-wheelFR.add(createWheel());
-wheelRL.add(createWheel());
-wheelRR.add(createWheel());
+// ============ МАТЕРИАЛЫ БЛОКОВ ============
 
-car.add(wheelFL);
-car.add(wheelFR);
-car.add(wheelRL);
-car.add(wheelRR);
+// Трава (верх — зелёный, бока — коричневый)
+function createGrassMaterial() {
+    const topTex = createTexture('#5aad3a');
+    const sideTex = createTexture('#8B6535');
+    const bottomTex = createTexture('#6B4513');
 
-// ---- Тень под машиной ----
-const shadowGeom = new THREE.CircleGeometry(2.2, 16);
-const shadowMat = new THREE.MeshBasicMaterial({
-    color: 0x000000,
-    transparent: true,
-    opacity: 0.3
-});
-const carShadow = new THREE.Mesh(shadowGeom, shadowMat);
-carShadow.rotation.x = -Math.PI / 2;
-carShadow.position.y = 0.05;
-car.add(carShadow);
+    const topMat = new THREE.MeshLambertMaterial({ map: topTex });
+    const sideMat = new THREE.MeshLambertMaterial({ map: sideTex });
+    const bottomMat = new THREE.MeshLambertMaterial({ map: bottomTex });
 
-car.position.set(0, 0, 0);
-scene.add(car);
+    // Порядок: +X, -X, +Y, -Y, +Z, -Z
+    return [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat];
+}
+
+// Земля (коричневая)
+function createDirtMaterial() {
+    const tex = createTexture('#6B4513');
+    return new THREE.MeshLambertMaterial({ map: tex });
+}
+
+// Камень (серый)
+function createStoneMaterial() {
+    const tex = createTexture('#808080');
+    return new THREE.MeshLambertMaterial({ map: tex });
+}
+
+// Дерево (ствол)
+function createWoodMaterial() {
+    const tex = createTexture('#6B4423');
+    return new THREE.MeshLambertMaterial({ map: tex });
+}
+
+// Листья (тёмно-зелёные)
+function createLeafMaterial() {
+    const tex = createTexture('#2d5a1e');
+    return new THREE.MeshLambertMaterial({ map: tex });
+}
+
+// ============ СОЗДАНИЕ БЛОКОВ ============
+
+const BLOCK_SIZE = 1;
+const blocks = [];
+
+function createBlock(x, y, z, material) {
+    const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+    const block = new THREE.Mesh(geometry, material);
+    block.position.set(x, y, z);
+    scene.add(block);
+    blocks.push(block);
+    return block;
+}
 
 // ============================================================
-// УПРАВЛЕНИЕ И ФИЗИКА
+// МИР — пол 8×8 блоков
+// ============================================================
+
+const WORLD_SIZE = 8;
+const grassMaterial = createGrassMaterial();
+
+for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
+    for (let z = -WORLD_SIZE / 2; z < WORLD_SIZE / 2; z++) {
+        createBlock(x, 0, z, grassMaterial);
+    }
+}
+
+// ============================================================
+// ПОСТРОЙКИ
+// ============================================================
+
+// ---- Небольшой холм из камня ----
+const stoneMaterial = createStoneMaterial();
+createBlock(2, 1, 2, stoneMaterial);
+createBlock(3, 1, 2, stoneMaterial);
+createBlock(2, 1, 3, stoneMaterial);
+createBlock(3, 1, 3, stoneMaterial);
+createBlock(2, 2, 2, stoneMaterial);
+createBlock(3, 2, 2, stoneMaterial);
+
+// ---- Дерево ----
+const woodMaterial = createWoodMaterial();
+const leafMaterial = createLeafMaterial();
+
+// Ствол
+createBlock(-2, 1, -2, woodMaterial);
+createBlock(-2, 2, -2, woodMaterial);
+createBlock(-2, 3, -2, woodMaterial);
+
+// Листва (крест из блоков)
+createBlock(-2, 4, -2, leafMaterial);
+createBlock(-1, 4, -2, leafMaterial);
+createBlock(-3, 4, -2, leafMaterial);
+createBlock(-2, 4, -1, leafMaterial);
+createBlock(-2, 4, -3, leafMaterial);
+createBlock(-2, 5, -2, leafMaterial);
+
+// ---- Каменная пирамидка ----
+createBlock(0, 1, 4, stoneMaterial);
+createBlock(1, 1, 4, stoneMaterial);
+createBlock(-1, 1, 4, stoneMaterial);
+createBlock(0, 2, 4, stoneMaterial);
+
+// ============================================================
+// УПРАВЛЕНИЕ — вращение камеры
 // ============================================================
 
 const keys = {};
+let cameraAngle = 0;         // горизонтальное вращение
+let cameraDistance = 12;     // расстояние от центра
+let cameraHeight = 8;        // высота
+let cameraPitch = -0.6;      // наклон вниз
 
-const carState = {
-    speed: 0,
-    angle: 0,
-    maxSpeed: 0.4,
-    maxReverse: -0.15,
-    accel: 0.012,
-    brakeDecel: 0.03,
-    friction: 0.92,
-    turnSpeed: 0.028,
-    bodyRoll: 0,
-    bodyPitch: 0,
-    wheelRotation: 0,
-    steerAngle: 0
-};
+const ROTATION_SPEED = 0.03;
 
 document.addEventListener('keydown', (e) => {
     keys[e.key.toLowerCase()] = true;
-    if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key.toLowerCase())) {
+    if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(e.key.toLowerCase())) {
         e.preventDefault();
     }
 });
@@ -318,95 +209,23 @@ function releaseKey(key) {
 window.pressKey = pressKey;
 window.releaseKey = releaseKey;
 
-// ============ ОБНОВЛЕНИЕ ============
+// ============ ОБНОВЛЕНИЕ КАМЕРЫ ============
 function update() {
-    // Газ / тормоз / реверс
-    if (keys['w'] || keys['arrowup']) {
-        carState.speed += carState.accel;
-    } else if (keys['s'] || keys['arrowdown']) {
-        carState.speed -= carState.brakeDecel;
+    // Вращение камеры
+    if (keys['left'] || keys['arrowleft']) {
+        cameraAngle += ROTATION_SPEED;
+    }
+    if (keys['right'] || keys['arrowright']) {
+        cameraAngle -= ROTATION_SPEED;
     }
 
-    carState.speed = Math.max(
-        carState.maxReverse,
-        Math.min(carState.maxSpeed, carState.speed)
-    );
+    // Позиция камеры — круг вокруг центра мира
+    camera.position.x = Math.sin(cameraAngle) * cameraDistance;
+    camera.position.z = Math.cos(cameraAngle) * cameraDistance;
+    camera.position.y = cameraHeight;
 
-    carState.speed *= carState.friction;
-
-    if (Math.abs(carState.speed) < 0.002) {
-        carState.speed = 0;
-    }
-
-    // Поворот
-    let targetSteer = 0;
-    if (Math.abs(carState.speed) > 0.005) {
-        const direction = carState.speed > 0 ? 1 : -1;
-        if (keys['a'] || keys['arrowleft']) {
-            carState.angle += carState.turnSpeed * direction;
-            targetSteer = 0.5;
-        }
-        if (keys['d'] || keys['arrowright']) {
-            carState.angle -= carState.turnSpeed * direction;
-            targetSteer = -0.5;
-        }
-    }
-    
-    carState.steerAngle += (targetSteer - carState.steerAngle) * 0.15;
-    wheelFL.rotation.y = carState.steerAngle;
-    wheelFR.rotation.y = carState.steerAngle;
-
-    // Движение
-    car.position.x += Math.sin(carState.angle) * carState.speed;
-    car.position.z += Math.cos(carState.angle) * carState.speed;
-    car.rotation.y = carState.angle;
-
-    // Крен кузова
-    const targetRoll = -carState.steerAngle * Math.abs(carState.speed) * 1.2;
-    carState.bodyRoll += (targetRoll - carState.bodyRoll) * 0.1;
-    carBody.rotation.z = carState.bodyRoll;
-
-    // Наклон носа
-    let targetPitch = 0;
-    if (keys['w'] || keys['arrowup']) {
-        targetPitch = -0.04;
-    }
-    if (keys['s'] || keys['arrowdown']) {
-        targetPitch = 0.05;
-    }
-    carState.bodyPitch += (targetPitch - carState.bodyPitch) * 0.1;
-    carBody.rotation.x = carState.bodyPitch;
-
-    // Вращение колёс
-    const speedForWheels = carState.speed * 4;
-    carState.wheelRotation += speedForWheels;
-    
-    [wheelFL, wheelFR, wheelRL, wheelRR].forEach(w => {
-        w.children[0].rotation.x = carState.wheelRotation;
-        w.children[1].rotation.x = carState.wheelRotation;
-    });
-
-    // ============================================================
-    // КАМЕРА — ОБНОВЛЕНО
-    // ============================================================
-    const camDist = 16;
-    const camHeight = 10;
-    const camTargetX = car.position.x - Math.sin(carState.angle) * camDist;
-    const camTargetZ = car.position.z - Math.cos(carState.angle) * camDist;
-
-    camera.position.x += (camTargetX - camera.position.x) * 0.08;
-    camera.position.z += (camTargetZ - camera.position.z) * 0.08;
-    camera.position.y += (camHeight - camera.position.y) * 0.08;
-
-    // Смотрим ВПЕРЁД (перед машиной), а не на неё
-    camera.lookAt(
-        car.position.x + Math.sin(carState.angle) * 10,
-        car.position.y + 1,
-        car.position.z + Math.cos(carState.angle) * 10
-    );
-
-    // HUD
-    document.getElementById('speed').textContent = Math.round(Math.abs(carState.speed) * 200);
+    // Камера смотрит в центр мира (примерно)
+    camera.lookAt(0, 1, 0);
 }
 
 // ============ ЦИКЛ ============
@@ -424,3 +243,6 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// ============ HUD ============
+document.getElementById('world-info').textContent = blocks.length + ' блоков';
