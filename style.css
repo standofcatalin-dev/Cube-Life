@@ -3,6 +3,7 @@
     padding: 0;
     box-sizing: border-box;
     overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
@@ -13,6 +14,7 @@ html, body {
     color: white;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: none;
 }
 
 #game-container {
@@ -49,22 +51,49 @@ html, body {
     box-shadow: 0 0 20px rgba(255, 200, 0, 0.4);
 }
 
-#controls {
+/* ============ КНОПКИ УПРАВЛЕНИЯ ============ */
+#mobile-controls {
     position: absolute;
     bottom: 20px;
     left: 0;
     right: 0;
-    text-align: center;
-    pointer-events: none;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
     z-index: 10;
+    pointer-events: none;
 }
 
-.control-hint {
-    display: inline-block;
-    background: rgba(0, 0, 0, 0.75);
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 13px;
+.controls-left, .controls-right {
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.ctrl-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid #ffc800;
+    background: rgba(0, 0, 0, 0.6);
     color: #ffc800;
-    border: 1px solid rgba(255, 200, 0, 0.3);
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s, background 0.1s;
+}
+
+.ctrl-btn:active,
+.ctrl-btn.pressed {
+    background: rgba(255, 200, 0, 0.4);
+    transform: scale(0.9);
+}
+
+.ctrl-btn.gas {
+    background: rgba(255, 200, 0, 0.2);
+    border-color: #ffc800;
+    color: #ffc800;
 }
