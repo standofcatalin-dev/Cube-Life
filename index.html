@@ -21,8 +21,25 @@
 
         <button id="camera-btn" onclick="toggleCamera()">📷</button>
 
-        <!-- Hotbar как в Minecraft -->
+        <!-- Информация о выбранном блоке -->
+        <div id="selected-block-info">
+            Блок: <span id="selected-block">Трава</span>
+        </div>
+
+        <!-- Hotbar -->
         <div id="inventory-bar"></div>
+
+        <!-- Большой инвентарь (открывается по Y) -->
+        <div id="inventory-modal">
+            <div class="inv-modal-content">
+                <div class="inv-modal-header">
+                    <h2>🎒 Инвентарь</h2>
+                    <button onclick="toggleInventory()" class="inv-modal-close">✖</button>
+                </div>
+                <div id="inventory-modal-grid" class="inv-modal-grid"></div>
+                <div class="inv-modal-hint">Нажми на блок, чтобы выбрать • Y или Esc — закрыть</div>
+            </div>
+        </div>
 
         <div id="controls" class="mobile-only">
             <div class="controls-left">
@@ -44,7 +61,7 @@
             <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
         </div>
 
-        <div id="hint">1-5 или колесо — выбор блока • ЛКМ поставить • ПКМ сломать</div>
+        <div id="hint">Y — открыть инвентарь • 1-5 — выбор блока • ЛКМ поставить • ПКМ сломать</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
