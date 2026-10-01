@@ -170,8 +170,10 @@ html, body {
     pointer-events: none;
 }
 
-/* ===== ИНВЕНТАРЬ ===== */
-#inventory-modal, #crafting-modal {
+/* ============================================================
+   ИНВЕНТАРЬ + КРАФТ
+   ============================================================ */
+#inventory-modal {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.85);
@@ -179,21 +181,21 @@ html, body {
     align-items: center;
     justify-content: center;
     z-index: 100;
-    padding: 20px;
+    padding: 12px;
 }
 
-#inventory-modal.open, #crafting-modal.open {
+#inventory-modal.open {
     display: flex;
 }
 
-.inv-modal-content, .craft-modal-content {
+.inv-modal-content {
     background: #1e1e1e;
     border: 3px solid #5a5a5a;
     border-radius: 12px;
-    padding: 20px;
-    max-width: 520px;
+    padding: 16px;
+    max-width: 560px;
     width: 100%;
-    max-height: 90vh;
+    max-height: 95vh;
     overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
@@ -202,48 +204,49 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     border-bottom: 2px solid #5a5a5a;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
 }
 
 .inv-modal-header h2 {
-    font-size: 20px;
+    font-size: 17px;
     color: #ffffff;
 }
 
-.inv-modal-close, .craft-modal-close {
-    width: 36px;
-    height: 36px;
+.inv-modal-close {
+    width: 34px;
+    height: 34px;
     border-radius: 6px;
     border: 2px solid #ff4444;
     background: rgba(0, 0, 0, 0.5);
     color: #ff4444;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.inv-modal-close:hover, .craft-modal-close:hover {
+.inv-modal-close:hover {
     background: rgba(255, 68, 68, 0.3);
 }
 
+/* Превью игрока */
 .inv-player-preview {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 12px;
+    gap: 12px;
+    padding: 10px;
     background: rgba(0, 0, 0, 0.4);
     border: 2px solid #3a3a3a;
     border-radius: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 #player-preview {
-    width: 80px;
-    height: 120px;
+    width: 70px;
+    height: 105px;
     image-rendering: pixelated;
     border-radius: 6px;
     flex-shrink: 0;
@@ -253,15 +256,15 @@ html, body {
 .inv-player-stats {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
     flex: 1;
 }
 
 .inv-stat-row {
     display: flex;
     justify-content: space-between;
-    font-size: 13px;
-    padding: 6px 10px;
+    font-size: 12px;
+    padding: 5px 8px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 5px;
 }
@@ -269,80 +272,45 @@ html, body {
 .inv-stat-label { color: rgba(255, 255, 255, 0.7); }
 .inv-stat-value { color: #ffc800; font-weight: bold; }
 
-.inv-modal-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+/* КРАФТ */
+.craft-section-inv {
     margin-bottom: 12px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid #3a3a3a;
+    border-radius: 10px;
 }
 
-.inv-modal-slot {
-    aspect-ratio: 1;
-    background: rgba(139, 139, 139, 0.3);
-    border: 2px solid #5a5a5a;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.15s;
-    padding: 6px;
-}
-
-.inv-modal-slot.active {
-    border: 3px solid #ffc800;
-    background: rgba(255, 200, 0, 0.2);
-    box-shadow: 0 0 15px rgba(255, 200, 0, 0.6);
-}
-
-.inv-modal-slot .inv-icon-img {
-    width: 55px;
-    height: 55px;
-    margin-bottom: 4px;
-}
-
-.inv-modal-name {
-    font-size: 11px;
-    color: #ffffff;
-    text-align: center;
+.craft-label {
+    font-size: 13px;
     font-weight: bold;
-}
-
-.inv-modal-hint {
+    color: #ffa500;
     text-align: center;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-    margin-top: 4px;
-}
-
-/* ===== КРАФТ ===== */
-.craft-section {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 8px rgba(255, 165, 0, 0.5);
 }
 
 .craft-grid-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 10px;
 }
 
 .craft-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-    padding: 8px;
+    gap: 3px;
+    padding: 6px;
     background: rgba(0, 0, 0, 0.4);
     border: 2px solid #3a3a3a;
     border-radius: 8px;
 }
 
 .craft-cell {
-    width: 50px;
-    height: 50px;
+    width: 42px;
+    height: 42px;
     background: rgba(139, 139, 139, 0.3);
     border: 2px solid #5a5a5a;
     border-radius: 6px;
@@ -363,19 +331,19 @@ html, body {
 }
 
 .craft-cell .inv-icon-img {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
 }
 
 .craft-arrow {
-    font-size: 32px;
+    font-size: 24px;
     color: #7eff7e;
     font-weight: bold;
 }
 
 .craft-result {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     background: rgba(139, 139, 139, 0.3);
     border: 3px solid #3a3a3a;
     border-radius: 8px;
@@ -384,7 +352,7 @@ html, body {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    padding: 4px;
+    padding: 3px;
 }
 
 .craft-result.active {
@@ -400,32 +368,31 @@ html, body {
 }
 
 .craft-result .inv-icon-img {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
 }
 
 .craft-result-name {
-    font-size: 9px;
+    font-size: 8px;
     color: #ffc800;
     font-weight: bold;
     text-align: center;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .craft-actions {
     display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 8px;
 }
 
 .craft-action-btn {
     flex: 1;
-    padding: 12px;
+    padding: 9px;
     background: rgba(126, 255, 126, 0.2);
     border: 2px solid #7eff7e;
     border-radius: 8px;
     color: #7eff7e;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.15s;
@@ -442,46 +409,50 @@ html, body {
     color: #ff6464;
 }
 
-.craft-blocks-label {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 8px;
-    text-align: center;
-}
-
-.craft-blocks {
+/* Сетка блоков */
+.inv-modal-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, 50px);
     gap: 6px;
     justify-content: center;
-    margin-bottom: 12px;
+    padding: 4px 0;
 }
 
-.craft-block {
+.inv-modal-slot {
     width: 50px;
     height: 50px;
     background: rgba(139, 139, 139, 0.3);
     border: 2px solid #5a5a5a;
-    border-radius: 6px;
+    border-radius: 8px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    position: relative;
     transition: all 0.15s;
+    padding: 3px;
 }
 
-.craft-block:hover {
+.inv-modal-slot:hover {
     border-color: #7eff7e;
     background: rgba(126, 255, 126, 0.2);
+    transform: scale(1.05);
 }
 
-.craft-block:active {
-    transform: scale(0.9);
+.inv-modal-slot.active {
+    border: 3px solid #ffc800;
+    background: rgba(255, 200, 0, 0.2);
+    box-shadow: 0 0 15px rgba(255, 200, 0, 0.6);
 }
 
-.craft-block .inv-icon-img {
-    width: 38px;
-    height: 38px;
+.inv-modal-slot .inv-icon-img {
+    width: 36px;
+    height: 36px;
+}
+
+.inv-modal-name {
+    display: none;
 }
 
 /* Уведомление */
@@ -494,7 +465,7 @@ html, body {
     color: white;
     padding: 16px 32px;
     border-radius: 12px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     opacity: 0;
     pointer-events: none;
@@ -508,13 +479,15 @@ html, body {
     transform: translate(-50%, -50%) scale(1);
 }
 
-/* Кнопки */
-#inventory-toggle-btn, #crafting-toggle-btn {
+/* Кнопка инвентаря */
+#inventory-toggle-btn {
     position: absolute;
+    top: 90px;
+    right: 80px;
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    border: 3px solid;
+    border: 3px solid #7eff7e;
     background: rgba(0, 0, 0, 0.6);
     color: white;
     font-size: 24px;
@@ -525,20 +498,8 @@ html, body {
     z-index: 10;
 }
 
-#inventory-toggle-btn {
-    top: 90px;
-    right: 80px;
-    border-color: #7eff7e;
-}
-
-#crafting-toggle-btn {
-    top: 90px;
-    right: 144px;
-    border-color: #ffa500;
-}
-
-#inventory-toggle-btn:active,
-#crafting-toggle-btn:active {
+#inventory-toggle-btn:active {
+    background: rgba(126, 255, 126, 0.4);
     transform: scale(0.9);
 }
 
