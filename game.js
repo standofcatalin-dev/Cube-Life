@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 8: Оптимизация + чёткие иконки
+// CUBE LIFE — Этап 9: Превью игрока + оптимизация
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -17,12 +17,7 @@ scene.background = new THREE.Color(0x87CEEB);
 scene.fog = new THREE.Fog(0x87CEEB, 30, 80);
 
 // ============ КАМЕРА ============
-const camera = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    500
-);
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 500);
 
 // ============ РЕНДЕРЕР ============
 const renderer = new THREE.WebGLRenderer({
@@ -34,8 +29,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(1);
 
 // ============ ОСВЕЩЕНИЕ ============
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
-scene.add(ambientLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
 
 const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
 sunLight.position.set(50, 100, 30);
@@ -125,10 +119,14 @@ function createWoodTexture() {
 // ============ МАТЕРИАЛЫ ============
 
 function createGrassMaterial() {
-    const topMat = new THREE.MeshLambertMaterial({ map: createTexture('#5AAD3A') });
-    const sideMat = new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') });
-    const bottomMat = new THREE.MeshLambertMaterial({ map: createTexture('#6B4513') });
-    return [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat];
+    return [
+        new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') }),
+        new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') }),
+        new THREE.MeshLambertMaterial({ map: createTexture('#5AAD3A') }),
+        new THREE.MeshLambertMaterial({ map: createTexture('#6B4513') }),
+        new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') }),
+        new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') })
+    ];
 }
 
 function createStoneMaterial() {
@@ -136,9 +134,14 @@ function createStoneMaterial() {
 }
 
 function createWoodMaterial() {
-    const sideMat = new THREE.MeshLambertMaterial({ map: createWoodTexture() });
-    const topMat = new THREE.MeshLambertMaterial({ map: createTexture('#A0703A') });
-    return [sideMat, sideMat, topMat, topMat, sideMat, sideMat];
+    return [
+        new THREE.MeshLambertMaterial({ map: createWoodTexture() }),
+        new THREE.MeshLambertMaterial({ map: createWoodTexture() }),
+        new THREE.MeshLambertMaterial({ map: createTexture('#A0703A') }),
+        new THREE.MeshLambertMaterial({ map: createTexture('#A0703A') }),
+        new THREE.MeshLambertMaterial({ map: createWoodTexture() }),
+        new THREE.MeshLambertMaterial({ map: createWoodTexture() })
+    ];
 }
 
 function createLeafMaterial() {
@@ -164,7 +167,6 @@ const INVENTORY = [
 let selectedSlot = 0;
 let inventoryOpen = false;
 
-// Кэш иконок
 const ICON_CACHE = {};
 
 // ============ БЛОКИ ============
@@ -258,18 +260,15 @@ createBlock(treeX, 8, treeZ, leafMaterial);
 // ПОДСВЕТКА
 // ============================================================
 
-const highlightGeometry = new THREE.BoxGeometry(
-    BLOCK_SIZE + 0.02,
-    BLOCK_SIZE + 0.02,
-    BLOCK_SIZE + 0.02
+const highlightBox = new THREE.Mesh(
+    new THREE.BoxGeometry(BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02),
+    new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.8
+    })
 );
-const highlightMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.8
-});
-const highlightBox = new THREE.Mesh(highlightGeometry, highlightMaterial);
 highlightBox.visible = false;
 scene.add(highlightBox);
 
@@ -286,13 +285,12 @@ function createHuman() {
     const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
     const hairMat = new THREE.MeshLambertMaterial({ color: 0x4a2c0a });
 
-    const headGeom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-    const head = new THREE.Mesh(headGeom, skinMat);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
     head.position.y = 1.75;
     human.add(head);
 
-    const eyeGeom = new THREE.BoxGeometry(0.1, 0.1, 0.05);
     const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const eyeGeom = new THREE.BoxGeometry(0.1, 0.1, 0.05);
 
     const eyeLeft = new THREE.Mesh(eyeGeom, eyeMat);
     eyeLeft.position.set(-0.12, 1.8, 0.26);
@@ -302,13 +300,11 @@ function createHuman() {
     eyeRight.position.set(0.12, 1.8, 0.26);
     human.add(eyeRight);
 
-    const hairGeom = new THREE.BoxGeometry(0.52, 0.15, 0.52);
-    const hair = new THREE.Mesh(hairGeom, hairMat);
+    const hair = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.52), hairMat);
     hair.position.y = 1.98;
     human.add(hair);
 
-    const bodyGeom = new THREE.BoxGeometry(0.55, 0.7, 0.3);
-    const body = new THREE.Mesh(bodyGeom, shirtMat);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.7, 0.3), shirtMat);
     body.position.y = 1.15;
     human.add(body);
 
@@ -363,31 +359,20 @@ scene.add(human);
 // ============================================================
 
 const keys = {};
-
-const player = {
-    x: 0,
-    z: 0,
-    angle: 0,
-    speed: 0.08,
-    turnSpeed: 0.05
-};
+const player = { x: 0, z: 0, angle: 0, speed: 0.08, turnSpeed: 0.05 };
 
 let cameraMode = 3;
 let cameraFollowAngle = 0;
 let cameraPitchAngle = 0;
 
-const KEY_MAP = {
-    'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v', 'н': 'y'
-};
+const KEY_MAP = { 'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v', 'н': 'y' };
 
 document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     const normalizedKey = KEY_MAP[key] || key;
     keys[normalizedKey] = true;
 
-    if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(key)) {
-        e.preventDefault();
-    }
+    if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(key)) e.preventDefault();
     if (normalizedKey === 'v') toggleCamera();
     if (normalizedKey === 'y') toggleInventory();
     if (['1', '2', '3', '4', '5'].includes(key)) selectSlot(parseInt(key) - 1);
@@ -429,6 +414,7 @@ function toggleInventory() {
     if (inventoryOpen) {
         modal.classList.add('open');
         if (isPointerLocked) document.exitPointerLock();
+        drawPlayerPreview();
     } else {
         modal.classList.remove('open');
     }
@@ -495,8 +481,7 @@ const screenCenter = new THREE.Vector2(0, 0);
 
 function getTargetBlock() {
     raycaster.setFromCamera(screenCenter, camera);
-    const allBlocks = Array.from(blockMap.values());
-    const intersects = raycaster.intersectObjects(allBlocks);
+    const intersects = raycaster.intersectObjects(Array.from(blockMap.values()));
     if (intersects.length > 0) return intersects[0];
     return null;
 }
@@ -537,7 +522,6 @@ function placeBlock() {
 window.breakBlockBtn = breakBlock;
 window.placeBlockBtn = placeBlock;
 
-// ============ МЫШЬ (ПК) ============
 if (!isMobile) {
     document.addEventListener('mousedown', (e) => {
         if (inventoryOpen) return;
@@ -548,7 +532,7 @@ if (!isMobile) {
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
-// ============ ТАЧ (телефон) ============
+// ============ ТАЧ ============
 let lastTouchX = 0;
 let lastTouchY = 0;
 
@@ -608,16 +592,14 @@ function update() {
 
         const totalAngle = player.angle + cameraFollowAngle;
         const camDist = 6;
-        const baseHeight = 4 + cameraPitchAngle * 3;
-        const camHeight = Math.max(0.5, baseHeight);
+        const camHeight = Math.max(0.5, 4 + cameraPitchAngle * 3);
 
         const targetX = player.x - Math.sin(totalAngle) * camDist;
         const targetZ = player.z - Math.cos(totalAngle) * camDist;
-        const targetY = camHeight;
 
         camera.position.x += (targetX - camera.position.x) * 0.15;
         camera.position.z += (targetZ - camera.position.z) * 0.15;
-        camera.position.y += (targetY - camera.position.y) * 0.15;
+        camera.position.y += (camHeight - camera.position.y) * 0.15;
 
         camera.lookAt(player.x, 1.2, player.z);
         human.visible = true;
@@ -710,6 +692,91 @@ function getIcon(index) {
     ICON_CACHE[index] = makeInvIcon(item.color, item.secondaryColor);
     return ICON_CACHE[index];
 }
+
+// ============================================================
+// РИСУЕМ ЧЕЛОВЕЧКА (превью)
+// ============================================================
+
+function drawPlayerPreview() {
+    const c = document.getElementById('player-preview');
+    if (!c) return;
+
+    const ctx = c.getContext('2d');
+    const W = c.width;
+    const H = c.height;
+
+    // Фон — небо с облаками
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+    skyGrad.addColorStop(0, '#87CEEB');
+    skyGrad.addColorStop(1, '#B0E0F5');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Прозрачные облака
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.beginPath();
+    ctx.arc(15, 20, 8, 0, Math.PI * 2);
+    ctx.arc(25, 22, 10, 0, Math.PI * 2);
+    ctx.arc(60, 30, 9, 0, Math.PI * 2);
+    ctx.arc(70, 32, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Земля
+    ctx.fillStyle = '#5AAD3A';
+    ctx.fillRect(0, H - 20, W, 20);
+    ctx.fillStyle = '#8B6535';
+    ctx.fillRect(0, H - 8, W, 8);
+
+    // Человечек (пиксельный стиль)
+    const cx = W / 2;
+    const cy = H - 20;
+
+    // Ноги
+    ctx.fillStyle = '#333366';
+    ctx.fillRect(cx - 10, cy - 20, 8, 18);
+    ctx.fillRect(cx + 2, cy - 20, 8, 18);
+
+    // Обувь
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(cx - 11, cy - 4, 10, 4);
+    ctx.fillRect(cx + 1, cy - 4, 10, 4);
+
+    // Тело (рубашка)
+    ctx.fillStyle = '#3366cc';
+    ctx.fillRect(cx - 12, cy - 48, 24, 30);
+
+    // Руки
+    ctx.fillRect(cx - 18, cy - 46, 6, 26);
+    ctx.fillRect(cx + 12, cy - 46, 6, 26);
+
+    // Кисти рук
+    ctx.fillStyle = '#ffcc99';
+    ctx.fillRect(cx - 18, cy - 20, 6, 5);
+    ctx.fillRect(cx + 12, cy - 20, 6, 5);
+
+    // Голова
+    ctx.fillStyle = '#ffcc99';
+    ctx.fillRect(cx - 10, cy - 68, 20, 20);
+
+    // Глаза
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(cx - 6, cy - 60, 3, 3);
+    ctx.fillRect(cx + 3, cy - 60, 3, 3);
+
+    // Рот
+    ctx.fillStyle = '#cc6666';
+    ctx.fillRect(cx - 4, cy - 53, 8, 2);
+
+    // Волосы
+    ctx.fillStyle = '#4a2c0a';
+    ctx.fillRect(cx - 11, cy - 70, 22, 6);
+    ctx.fillRect(cx - 11, cy - 64, 3, 10);
+    ctx.fillRect(cx + 8, cy - 64, 3, 10);
+}
+
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА
+// ============================================================
 
 function initHotbar() {
     const invBar = document.getElementById('inventory-bar');
