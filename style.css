@@ -113,9 +113,7 @@ html, body {
     font-weight: bold;
 }
 
-/* ============================================================
-   HOTBAR
-   ============================================================ */
+/* ===== HOTBAR ===== */
 #inventory-bar {
     position: absolute;
     bottom: 20px;
@@ -163,8 +161,6 @@ html, body {
     width: 44px;
     height: 44px;
     image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
     border-radius: 3px;
     pointer-events: none;
 }
@@ -180,14 +176,11 @@ html, body {
     pointer-events: none;
 }
 
-/* ============================================================
-   БОЛЬШОЙ ИНВЕНТАРЬ
-   ============================================================ */
+/* ===== БОЛЬШОЙ ИНВЕНТАРЬ ===== */
 #inventory-modal {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.85);
     display: none;
     align-items: center;
     justify-content: center;
@@ -197,12 +190,6 @@ html, body {
 
 #inventory-modal.open {
     display: flex;
-    animation: fadeIn 0.2s;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
 }
 
 .inv-modal-content {
@@ -241,7 +228,6 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
 }
 
 .inv-modal-close:hover {
@@ -302,7 +288,7 @@ html, body {
     margin-top: 8px;
 }
 
-/* ===== КНОПКА 🎒 (для мобильных) ===== */
+/* ===== КНОПКА 🎒 ===== */
 #inventory-toggle-btn {
     position: absolute;
     top: 90px;
