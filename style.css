@@ -30,6 +30,108 @@ html, body {
     height: 100%;
 }
 
+/* ============================================================
+   МЕНЮ ПРИ ВХОДЕ
+   ============================================================ */
+#start-menu {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, #4A90D9 0%, #87CEEB 50%, #5AAD3A 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+#start-menu.hidden {
+    display: none;
+}
+
+.menu-content {
+    background: rgba(20, 20, 30, 0.9);
+    border: 4px solid #7eff7e;
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.menu-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #7eff7e;
+    text-shadow: 0 0 20px rgba(126, 255, 126, 0.8);
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+}
+
+#menu-player-canvas {
+    width: 130px;
+    height: 195px;
+    image-rendering: pixelated;
+    margin: 0 auto 16px;
+    display: block;
+    background: linear-gradient(180deg, #87CEEB, #B0E0F5);
+    border-radius: 12px;
+    border: 3px solid #5a5a5a;
+}
+
+.menu-subtitle {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 14px;
+}
+
+.menu-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    border: 3px solid;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.menu-btn:active {
+    transform: scale(0.97);
+}
+
+.menu-btn.game {
+    border-color: #7eff7e;
+    color: #7eff7e;
+    background: rgba(126, 255, 126, 0.15);
+}
+
+.menu-btn.survival {
+    border-color: #ffa500;
+    color: #ffa500;
+    background: rgba(255, 165, 0, 0.15);
+}
+
+.menu-btn.creative {
+    border-color: #ff64ff;
+    color: #ff64ff;
+    background: rgba(255, 100, 255, 0.15);
+}
+
+.menu-hint {
+    display: block;
+    font-size: 11px;
+    font-weight: normal;
+    opacity: 0.7;
+    margin-top: 3px;
+}
+
 #hud {
     position: absolute;
     top: 16px;
@@ -49,7 +151,6 @@ html, body {
     font-weight: bold;
     color: #7eff7e;
     border: 2px solid #7eff7e;
-    text-shadow: 0 0 10px rgba(126, 255, 126, 0.6);
 }
 
 .hud-right {
@@ -83,11 +184,6 @@ html, body {
     align-items: center;
     justify-content: center;
     z-index: 10;
-}
-
-#camera-btn:active {
-    background: rgba(255, 200, 0, 0.4);
-    transform: scale(0.9);
 }
 
 #selected-block-info {
@@ -139,7 +235,6 @@ html, body {
     justify-content: center;
     cursor: pointer;
     position: relative;
-    transition: all 0.1s;
     user-select: none;
 }
 
@@ -149,6 +244,10 @@ html, body {
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
     transform: scale(1.05);
     z-index: 5;
+}
+
+.inv-slot.empty {
+    opacity: 0.4;
 }
 
 .inv-icon-img {
@@ -168,6 +267,22 @@ html, body {
     color: #ffffff;
     text-shadow: 1px 1px 0 #000000, 1px 1px 3px #000000;
     pointer-events: none;
+}
+
+/* СЧЁТЧИК КОЛИЧЕСТВА */
+.inv-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 1px 1px 0 #000000, 1px 1px 4px #000000;
+    pointer-events: none;
+}
+
+.inv-count.inf {
+    color: #ffc800;
 }
 
 #inventory-modal {
@@ -194,7 +309,6 @@ html, body {
     width: 100%;
     max-height: 95vh;
     overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
 
 .inv-modal-header {
@@ -208,7 +322,6 @@ html, body {
 
 .inv-modal-header h2 {
     font-size: 17px;
-    color: #ffffff;
 }
 
 .inv-modal-close {
@@ -220,13 +333,6 @@ html, body {
     color: #ff4444;
     font-size: 15px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.inv-modal-close:hover {
-    background: rgba(255, 68, 68, 0.3);
 }
 
 .inv-player-preview {
@@ -265,7 +371,6 @@ html, body {
     border-radius: 5px;
 }
 
-.inv-stat-label { color: rgba(255, 255, 255, 0.7); }
 .inv-stat-value { color: #ffc800; font-weight: bold; }
 
 .craft-section-inv {
@@ -282,7 +387,6 @@ html, body {
     color: #ffa500;
     text-align: center;
     margin-bottom: 8px;
-    text-shadow: 0 0 8px rgba(255, 165, 0, 0.5);
 }
 
 .craft-grid-wrapper {
@@ -313,16 +417,11 @@ html, body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.15s;
 }
 
 .craft-cell.empty {
     background: rgba(50, 50, 50, 0.5);
     border-style: dashed;
-}
-
-.craft-cell:hover {
-    border-color: #ffc800;
 }
 
 .craft-cell .inv-icon-img {
@@ -346,7 +445,6 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
     padding: 3px;
 }
 
@@ -354,12 +452,6 @@ html, body {
     border-color: #ffc800;
     background: rgba(255, 200, 0, 0.2);
     box-shadow: 0 0 20px rgba(255, 200, 0, 0.7);
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
 }
 
 .craft-result .inv-icon-img {
@@ -372,7 +464,6 @@ html, body {
     color: #ffc800;
     font-weight: bold;
     text-align: center;
-    margin-top: 1px;
 }
 
 .craft-actions {
@@ -390,12 +481,6 @@ html, body {
     font-size: 13px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.15s;
-}
-
-.craft-action-btn:active {
-    background: rgba(126, 255, 126, 0.4);
-    transform: scale(0.97);
 }
 
 .craft-action-btn.reset {
@@ -406,42 +491,36 @@ html, body {
 
 .inv-modal-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 50px);
-    gap: 6px;
+    grid-template-columns: repeat(auto-fill, 55px);
+    gap: 8px;
     justify-content: center;
     padding: 4px 0;
 }
 
 .inv-modal-slot {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     background: rgba(139, 139, 139, 0.3);
     border: 2px solid #5a5a5a;
     border-radius: 8px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     position: relative;
-    transition: all 0.15s;
-    padding: 3px;
 }
 
 .inv-modal-slot:hover {
     border-color: #7eff7e;
-    background: rgba(126, 255, 126, 0.2);
-    transform: scale(1.05);
 }
 
 .inv-modal-slot.active {
     border: 3px solid #ffc800;
-    background: rgba(255, 200, 0, 0.2);
 }
 
 .inv-modal-slot .inv-icon-img {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
 }
 
 #craft-notification {
@@ -459,7 +538,6 @@ html, body {
     pointer-events: none;
     transition: all 0.3s;
     z-index: 200;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
 }
 
 #craft-notification.show {
@@ -501,7 +579,6 @@ html, body {
     align-items: center;
     justify-content: center;
     z-index: 10;
-    font-weight: bold;
 }
 
 #crouch-btn {
@@ -520,16 +597,6 @@ html, body {
     align-items: center;
     justify-content: center;
     z-index: 10;
-    font-weight: bold;
-}
-
-#jump-btn:active, #crouch-btn:active {
-    transform: scale(0.9);
-}
-
-#inventory-toggle-btn:active {
-    background: rgba(126, 255, 126, 0.4);
-    transform: scale(0.9);
 }
 
 #controls {
@@ -565,15 +632,6 @@ html, body {
     justify-content: center;
 }
 
-.ctrl-btn:active {
-    background: rgba(126, 255, 126, 0.3);
-    transform: scale(0.9);
-}
-
-.ctrl-btn.gas {
-    background: rgba(126, 255, 126, 0.2);
-}
-
 #action-buttons {
     position: absolute;
     bottom: 90px;
@@ -602,7 +660,6 @@ html, body {
 
 #break-btn { border-color: #ff4444; color: #ff4444; }
 #place-btn { border-color: #44ff44; color: #44ff44; }
-#break-btn:active, #place-btn:active { transform: scale(0.9); }
 
 #hint {
     position: absolute;
