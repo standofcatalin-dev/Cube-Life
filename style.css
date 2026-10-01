@@ -108,33 +108,19 @@ html, body {
 }
 
 .inv-slot {
-    width: 58px;
-    height: 58px;
+    width: 52px;
+    height: 52px;
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
+    font-size: 28px;
     cursor: pointer;
     transition: all 0.2s;
     user-select: none;
-    padding: 4px 2px;
-}
-
-.inv-icon {
-    font-size: 22px;
     line-height: 1;
-}
-
-.inv-label {
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 2px;
-    text-align: center;
-    line-height: 1.1;
-    font-weight: 500;
 }
 
 .inv-slot:hover {
@@ -151,7 +137,7 @@ html, body {
 /* ===== ИНФО О ВЫБРАННОМ БЛОКЕ ===== */
 #selected-block-info {
     position: absolute;
-    bottom: 90px;
+    bottom: 85px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.7);
@@ -172,7 +158,7 @@ html, body {
 /* ===== УПРАВЛЕНИЕ ===== */
 #controls {
     position: absolute;
-    bottom: 110px;
+    bottom: 100px;
     left: 0;
     right: 0;
     display: flex;
@@ -215,7 +201,7 @@ html, body {
 /* ===== КНОПКИ ДЕЙСТВИЙ ===== */
 #action-buttons {
     position: absolute;
-    bottom: 90px;
+    bottom: 85px;
     left: 0;
     right: 0;
     display: flex;
@@ -260,9 +246,4 @@ html, body {
     position: absolute;
     bottom: 5px;
     left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
-    z-index: 5;
-}
+    right: 
