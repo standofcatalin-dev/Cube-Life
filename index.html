@@ -19,36 +19,43 @@
             </div>
         </div>
 
-        <!-- Кнопка смены камеры -->
         <button id="camera-btn" onclick="toggleCamera()">📷</button>
 
-        <!-- Управление движением (только мобильные) -->
+        <!-- Панель инвентаря (внизу) -->
+        <div id="inventory-bar">
+            <div class="inv-slot active" onclick="selectSlot(0)">🟩</div>
+            <div class="inv-slot" onclick="selectSlot(1)">⬜</div>
+            <div class="inv-slot" onclick="selectSlot(2)">🟫</div>
+            <div class="inv-slot" onclick="selectSlot(3)">🌿</div>
+            <div class="inv-slot" onclick="selectSlot(4)">🟤</div>
+        </div>
+
+        <!-- Название выбранного блока -->
+        <div id="selected-block-info">
+            Блок: <span id="selected-block">Трава</span>
+        </div>
+
         <div id="controls" class="mobile-only">
             <div class="controls-left">
                 <button class="ctrl-btn"
-                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')"
-                        onmousedown="pressKey('a')" onmouseup="releaseKey('a')">◀</button>
+                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')">◀</button>
                 <button class="ctrl-btn"
-                        ontouchstart="pressKey('d')" ontouchend="releaseKey('d')"
-                        onmousedown="pressKey('d')" onmouseup="releaseKey('d')">▶</button>
+                        ontouchstart="pressKey('d')" ontouchend="releaseKey('d')">▶</button>
             </div>
             <div class="controls-right">
                 <button class="ctrl-btn"
-                        ontouchstart="pressKey('s')" ontouchend="releaseKey('s')"
-                        onmousedown="pressKey('s')" onmouseup="releaseKey('s')">▼</button>
+                        ontouchstart="pressKey('s')" ontouchend="releaseKey('s')">▼</button>
                 <button class="ctrl-btn gas"
-                        ontouchstart="pressKey('w')" ontouchend="releaseKey('w')"
-                        onmousedown="pressKey('w')" onmouseup="releaseKey('w')">▲</button>
+                        ontouchstart="pressKey('w')" ontouchend="releaseKey('w')">▲</button>
             </div>
         </div>
 
-        <!-- Кнопки ломать/ставить (только мобильные) -->
         <div id="action-buttons" class="mobile-only">
             <button id="break-btn" onclick="breakBlockBtn()">⛏️</button>
             <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
         </div>
 
-        <div id="hint">ПК: ЛКМ — поставить, ПКМ — сломать • V — камера</div>
+        <div id="hint">1-5 или колесо — выбор блока • ЛКМ поставить • ПКМ сломать</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
