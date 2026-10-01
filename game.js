@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 4.2: Дерево как в Minecraft
+// CUBE LIFE — Этап 4.3: Рабочая версия с инвентарём
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -42,275 +42,62 @@ sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
 // ============================================================
-// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ
+// ТЕКСТУРЫ (простые процедурные)
 // ============================================================
 
-function makeCanvas(size = 128) {
+function createTexture(baseColor, noiseAmount = 30, size = 64) {
     const c = document.createElement('canvas');
     c.width = size;
     c.height = size;
-    return c;
-}
-
-function textureFromCanvas(c) {
-    const texture = new THREE.CanvasTexture(c);
-    texture.magFilter = THREE.NearestFilter;
-    texture.minFilter = THREE.NearestFilter;
-    return texture;
-}
-
-// ============================================================
-// ТЕКСТУРЫ БЛОКОВ
-// ============================================================
-
-// ---------- ТРАВА (верх) ----------
-function makeGrassTopTexture() {
-    const size = 128;
-    const c = makeCanvas(size);
     const ctx = c.getContext('2d');
 
-    ctx.fillStyle = '#5AAD3A';
+    ctx.fillStyle = baseColor;
     ctx.fillRect(0, 0, size, size);
-
-    for (let i = 0; i < 350; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        const w = 1 + Math.random() * 2;
-        const h = 2 + Math.random() * 4;
-
-        const colors = ['#4A9D2A', '#6ABD4A', '#3A8D1A', '#7ACD5A'];
-        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-        ctx.fillRect(x, y, w, h);
-    }
-
-    for (let i = 0; i < 50; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        ctx.fillStyle = '#2A6D0A';
-        ctx.fillRect(x, y, 2, 2);
-    }
-
-    return c;
-}
-
-// ---------- ЗЕМЛЯ ----------
-function makeDirtTexture() {
-    const size = 128;
-    const c = makeCanvas(size);
-    const ctx = c.getContext('2d');
-
-    ctx.fillStyle = '#8B5A3C';
-    ctx.fillRect(0, 0, size, size);
-
-    for (let i = 0; i < 500; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        const w = 2 + Math.random() * 4;
-        const h = 2 + Math.random() * 4;
-
-        const colors = ['#6B4528', '#9B6B4C', '#5A3A1F', '#A07050', '#7A4E30'];
-        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-        ctx.fillRect(x, y, w, h);
-    }
-
-    for (let i = 0; i < 40; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        const r = 1 + Math.random() * 2;
-        ctx.fillStyle = '#4A2F18';
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    return c;
-}
-
-// ---------- ТРАВА (бока) ----------
-function makeGrassSideTexture() {
-    const size = 128;
-    const c = makeCanvas(size);
-    const ctx = c.getContext('2d');
-
-    ctx.fillStyle = '#8B5A3C';
-    ctx.fillRect(0, 0, size, size);
-
-    for (let i = 0; i < 400; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        const w = 2 + Math.random() * 4;
-        const h = 2 + Math.random() * 4;
-
-        const colors = ['#6B4528', '#9B6B4C', '#5A3A1F', '#A07050'];
-        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-        ctx.fillRect(x, y, w, h);
-    }
-
-    for (let i = 0; i < 20; i++) {
-        const x = Math.random() * size;
-        const h = 8 + Math.random() * 12;
-        const w = 3 + Math.random() * 4;
-
-        const colors = ['#5AAD3A', '#4A9D2A', '#6ABD4A'];
-        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-        ctx.fillRect(x, 0, w, h);
-    }
-
-    ctx.fillStyle = '#5AAD3A';
-    ctx.fillRect(0, 0, size, 6);
-
-    return c;
-}
-
-// ---------- КАМЕНЬ ----------
-function makeStoneTexture() {
-    const size = 128;
-    const c = makeCanvas(size);
-    const ctx = c.getContext('2d');
-
-    ctx.fillStyle = '#7F7F7F';
-    ctx.fillRect(0, 0, size, size);
-
-    for (let i = 0; i < 300; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        const w = 3 + Math.random() * 8;
-        const h = 3 + Math.random() * 8;
-
-        const colors = ['#6F6F6F', '#8F8F8F', '#5F5F5F', '#9F9F9F', '#7A7A7A'];
-        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-        ctx.fillRect(x, y, w, h);
-    }
-
-    for (let i = 0; i < 50; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        const r = 1 + Math.random() * 2;
-        ctx.fillStyle = '#4F4F4F';
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    return c;
-}
-
-// ---------- ДЕРЕВО (бока — кора) ----------
-function makeWoodSideTexture() {
-    const size = 128;
-    const c = makeCanvas(size);
-    const ctx = c.getContext('2d');
-
-    ctx.fillStyle = '#6B4A2A';
-    ctx.fillRect(0, 0, size, size);
-
-    for (let i = 0; i < 20; i++) {
-        const x = Math.random() * size;
-        const w = 1 + Math.random() * 3;
-        const color = Math.random() > 0.5 ? '#4F351A' : '#8B6535';
-        ctx.fillStyle = color;
-        ctx.fillRect(x, 0, w, size);
-    }
 
     const imageData = ctx.getImageData(0, 0, size, size);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
-        const variance = (Math.random() - 0.5) * 30;
-        data[i] = Math.max(0, Math.min(255, data[i] + variance));
-        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + variance));
-        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + variance));
+        const v = (Math.random() - 0.5) * noiseAmount;
+        data[i] = Math.max(0, Math.min(255, data[i] + v));
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + v));
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + v));
     }
     ctx.putImageData(imageData, 0, 0);
 
-    return c;
+    const tex = new THREE.CanvasTexture(c);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    return tex;
 }
 
-// ---------- ДЕРЕВО (верх/низ — кольца спила) ----------
-function makeWoodTopTexture() {
-    const size = 128;
-    const c = makeCanvas(size);
-    const ctx = c.getContext('2d');
-
-    ctx.fillStyle = '#A0703A';
-    ctx.fillRect(0, 0, size, size);
-
-    const cx = size / 2;
-    const cy = size / 2;
-    for (let r = 5; r < 65; r += 5) {
-        ctx.strokeStyle = '#6B4423';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-
-    ctx.fillStyle = '#4F351A';
-    ctx.beginPath();
-    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    return c;
-}
-
-// ---------- ЛИСТВА ----------
-function makeLeafTexture() {
-    const size = 128;
-    const c = makeCanvas(size);
-    const ctx = c.getContext('2d');
-
-    ctx.fillStyle = '#2D5A1E';
-    ctx.fillRect(0, 0, size, size);
-
-    for (let i = 0; i < 300; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        const w = 2 + Math.random() * 5;
-        const h = 2 + Math.random() * 5;
-
-        const colors = ['#1D4A0E', '#3D6A2E', '#4D7A3E', '#2A5A18'];
-        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-        ctx.fillRect(x, y, w, h);
-    }
-
-    for (let i = 0; i < 80; i++) {
-        const x = Math.random() * size;
-        const y = Math.random() * size;
-        ctx.fillStyle = '#0A2A05';
-        ctx.fillRect(x, y, 2, 2);
-    }
-
-    return c;
-}
-
-// ============================================================
-// МАТЕРИАЛЫ
-// ============================================================
+// ============ МАТЕРИАЛЫ ============
 
 function createGrassMaterial() {
-    const topMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeGrassTopTexture()) });
-    const sideMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeGrassSideTexture()) });
-    const bottomMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeDirtTexture()) });
+    const topMat = new THREE.MeshLambertMaterial({ map: createTexture('#5AAD3A') });
+    const sideMat = new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') });
+    const bottomMat = new THREE.MeshLambertMaterial({ map: createTexture('#6B4513') });
 
     return [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat];
 }
 
 function createStoneMaterial() {
-    return new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeStoneTexture()) });
+    return new THREE.MeshLambertMaterial({ map: createTexture('#808080') });
 }
 
 function createWoodMaterial() {
-    const sideMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeWoodSideTexture()) });
-    const topMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeWoodTopTexture()) });
+    // Дерево: бока — кора, верх/низ — светлое
+    const sideMat = new THREE.MeshLambertMaterial({ map: createTexture('#6B4423') });
+    const topMat = new THREE.MeshLambertMaterial({ map: createTexture('#A0703A') });
 
     return [sideMat, sideMat, topMat, topMat, sideMat, sideMat];
 }
 
 function createLeafMaterial() {
-    return new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeLeafTexture()) });
+    return new THREE.MeshLambertMaterial({ map: createTexture('#2D5A1E', 40) });
 }
 
 function createDirtMaterial() {
-    return new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeDirtTexture()) });
+    return new THREE.MeshLambertMaterial({ map: createTexture('#5A3A1A', 40) });
 }
 
 // ============================================================
@@ -368,7 +155,7 @@ for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
 // ============================================================
 const stoneMaterial = createStoneMaterial();
 
-// Каменный холм
+// Холм
 createBlock(2, 1, 2, stoneMaterial);
 createBlock(3, 1, 2, stoneMaterial);
 createBlock(2, 1, 3, stoneMaterial);
@@ -380,20 +167,19 @@ const woodMaterial = createWoodMaterial();
 const leafMaterial = createLeafMaterial();
 
 // ============================================================
-// ДЕРЕВО КАК В MINECRAFT
+// ДЕРЕВО
 // ============================================================
 const treeX = -3;
 const treeZ = -3;
 
-// --- СТВОЛ (5 блоков вертикально) ---
+// Ствол
 createBlock(treeX, 1, treeZ, woodMaterial);
 createBlock(treeX, 2, treeZ, woodMaterial);
 createBlock(treeX, 3, treeZ, woodMaterial);
 createBlock(treeX, 4, treeZ, woodMaterial);
 createBlock(treeX, 5, treeZ, woodMaterial);
 
-// --- КРОНА (листва) ---
-// Нижний слой (5×5, без углов)
+// Крона — нижний слой (5×5, без углов)
 createBlock(treeX - 2, 5, treeZ, leafMaterial);
 createBlock(treeX + 2, 5, treeZ, leafMaterial);
 createBlock(treeX, 5, treeZ - 2, leafMaterial);
@@ -412,8 +198,6 @@ createBlock(treeX + 2, 5, treeZ + 1, leafMaterial);
 // Средний слой (5×5 полный)
 for (let dx = -2; dx <= 2; dx++) {
     for (let dz = -2; dz <= 2; dz++) {
-        // Пропускаем ствол
-        if (dx === 0 && dz === 0 && false) continue;
         createBlock(treeX + dx, 6, treeZ + dz, leafMaterial);
     }
 }
@@ -425,7 +209,7 @@ for (let dx = -1; dx <= 1; dx++) {
     }
 }
 
-// Самый верх (1 блок)
+// Макушка
 createBlock(treeX, 8, treeZ, leafMaterial);
 
 // ============================================================
@@ -617,7 +401,10 @@ function selectSlot(index) {
     });
 
     const item = INVENTORY[index];
-    document.getElementById('selected-block').textContent = item.name;
+    const selectedEl = document.getElementById('selected-block');
+    if (selectedEl) {
+        selectedEl.textContent = item.name;
+    }
 }
 window.selectSlot = selectSlot;
 
@@ -817,7 +604,10 @@ function update() {
     }
 
     // ============ HUD ============
-    document.getElementById('world-info').textContent = blockMap.size + ' блоков';
+    const worldInfoEl = document.getElementById('world-info');
+    if (worldInfoEl) {
+        worldInfoEl.textContent = blockMap.size + ' блоков';
+    }
 }
 
 // ============ ЦИКЛ ============
