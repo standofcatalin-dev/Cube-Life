@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 4: Инвентарь блоков
+// CUBE LIFE — Этап 4.1: Реалистичные текстуры (как в Minecraft)
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -34,81 +34,321 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(1);
 
 // ============ ОСВЕЩЕНИЕ ============
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
 scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xffffff, 0.7);
+const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
 sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
 // ============================================================
-// ТЕКСТУРЫ
+// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ — создание canvas-текстуры
 // ============================================================
 
-function createTexture(color, noise = true) {
-    const size = 64;
-    const canvas2 = document.createElement('canvas');
-    canvas2.width = size;
-    canvas2.height = size;
-    const ctx = canvas2.getContext('2d');
+function makeCanvas(size = 128) {
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    return c;
+}
 
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, size, size);
-
-    if (noise) {
-        const imageData = ctx.getImageData(0, 0, size, size);
-        const data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            const variance = (Math.random() - 0.5) * 30;
-            data[i] = Math.max(0, Math.min(255, data[i] + variance));
-            data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + variance));
-            data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + variance));
-        }
-        ctx.putImageData(imageData, 0, 0);
-    }
-
-    const texture = new THREE.CanvasTexture(canvas2);
+function textureFromCanvas(c) {
+    const texture = new THREE.CanvasTexture(c);
     texture.magFilter = THREE.NearestFilter;
     texture.minFilter = THREE.NearestFilter;
     return texture;
 }
 
-// ============ МАТЕРИАЛЫ ============
+// ============================================================
+// ТЕКСТУРЫ БЛОКОВ (как в Minecraft)
+// ============================================================
+
+// ---------- ТРАВА (верх) ----------
+function makeGrassTopTexture() {
+    const size = 128;
+    const c = makeCanvas(size);
+    const ctx = c.getContext('2d');
+
+    // Базовый зелёный
+    ctx.fillStyle = '#5AAD3A';
+    ctx.fillRect(0, 0, size, size);
+
+    // Травинки (мелкие вертикальные линии)
+    for (let i = 0; i < 350; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 1 + Math.random() * 2;
+        const h = 2 + Math.random() * 4;
+
+        const colors = ['#4A9D2A', '#6ABD4A', '#3A8D1A', '#7ACD5A'];
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.fillRect(x, y, w, h);
+    }
+
+    // Тёмные точки
+    for (let i = 0; i < 50; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        ctx.fillStyle = '#2A6D0A';
+        ctx.fillRect(x, y, 2, 2);
+    }
+
+    return c;
+}
+
+// ---------- ЗЕМЛЯ (низ травы и блок "земля") ----------
+function makeDirtTexture() {
+    const size = 128;
+    const c = makeCanvas(size);
+    const ctx = c.getContext('2d');
+
+    // Базовый коричневый
+    ctx.fillStyle = '#8B5A3C';
+    ctx.fillRect(0, 0, size, size);
+
+    // Крупинки
+    for (let i = 0; i < 500; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 2 + Math.random() * 4;
+        const h = 2 + Math.random() * 4;
+
+        const colors = ['#6B4528', '#9B6B4C', '#5A3A1F', '#A07050', '#7A4E30'];
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.fillRect(x, y, w, h);
+    }
+
+    // Тёмные камушки
+    for (let i = 0; i < 40; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 1 + Math.random() * 2;
+        ctx.fillStyle = '#4A2F18';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    return c;
+}
+
+// ---------- ТРАВА (бока — верх зелёный, низ коричневый) ----------
+function makeGrassSideTexture() {
+    const size = 128;
+    const c = makeCanvas(size);
+    const ctx = c.getContext('2d');
+
+    // Основа — земля
+    ctx.fillStyle = '#8B5A3C';
+    ctx.fillRect(0, 0, size, size);
+
+    // Крупинки земли
+    for (let i = 0; i < 400; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 2 + Math.random() * 4;
+        const h = 2 + Math.random() * 4;
+
+        const colors = ['#6B4528', '#9B6B4C', '#5A3A1F', '#A07050'];
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.fillRect(x, y, w, h);
+    }
+
+    // Верхняя зелёная полоса (трава свисает)
+    for (let i = 0; i < 20; i++) {
+        const x = Math.random() * size;
+        const h = 8 + Math.random() * 12;
+        const w = 3 + Math.random() * 4;
+
+        const colors = ['#5AAD3A', '#4A9D2A', '#6ABD4A'];
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.fillRect(x, 0, w, h);
+    }
+
+    // Основной зелёный слой сверху
+    ctx.fillStyle = '#5AAD3A';
+    ctx.fillRect(0, 0, size, 6);
+
+    return c;
+}
+
+// ---------- КАМЕНЬ ----------
+function makeStoneTexture() {
+    const size = 128;
+    const c = makeCanvas(size);
+    const ctx = c.getContext('2d');
+
+    // Базовый серый
+    ctx.fillStyle = '#7F7F7F';
+    ctx.fillRect(0, 0, size, size);
+
+    // Пятна разных оттенков
+    for (let i = 0; i < 300; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 3 + Math.random() * 8;
+        const h = 3 + Math.random() * 8;
+
+        const colors = ['#6F6F6F', '#8F8F8F', '#5F5F5F', '#9F9F9F', '#7A7A7A'];
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.fillRect(x, y, w, h);
+    }
+
+    // Тёмные трещины
+    for (let i = 0; i < 50; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 1 + Math.random() * 2;
+        ctx.fillStyle = '#4F4F4F';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    return c;
+}
+
+// ---------- ДЕРЕВО (ствол) ----------
+function makeWoodSideTexture() {
+    const size = 128;
+    const c = makeCanvas(size);
+    const ctx = c.getContext('2d');
+
+    // Базовый цвет коры
+    ctx.fillStyle = '#6B4A2A';
+    ctx.fillRect(0, 0, size, size);
+
+    // Вертикальные полосы
+    for (let i = 0; i < 20; i++) {
+        const x = Math.random() * size;
+        const w = 1 + Math.random() * 3;
+        const color = Math.random() > 0.5 ? '#4F351A' : '#8B6535';
+        ctx.fillStyle = color;
+        ctx.fillRect(x, 0, w, size);
+    }
+
+    // Шум
+    const imageData = ctx.getImageData(0, 0, size, size);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        const variance = (Math.random() - 0.5) * 30;
+        data[i] = Math.max(0, Math.min(255, data[i] + variance));
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + variance));
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + variance));
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    return c;
+}
+
+// ---------- ДЕРЕВО (спил сверху — кольца) ----------
+function makeWoodTopTexture() {
+    const size = 128;
+    const c = makeCanvas(size);
+    const ctx = c.getContext('2d');
+
+    // База
+    ctx.fillStyle = '#A0703A';
+    ctx.fillRect(0, 0, size, size);
+
+    // Концентрические кольца
+    const cx = size / 2;
+    const cy = size / 2;
+    for (let r = 5; r < 65; r += 5) {
+        ctx.strokeStyle = '#6B4423';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    // Центральная точка
+    ctx.fillStyle = '#4F351A';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Шум
+    const imageData = ctx.getImageData(0, 0, size, size);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        const variance = (Math.random() - 0.5) * 20;
+        data[i] = Math.max(0, Math.min(255, data[i] + variance));
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + variance));
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + variance));
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    return c;
+}
+
+// ---------- ЛИСТВА ----------
+function makeLeafTexture() {
+    const size = 128;
+    const c = makeCanvas(size);
+    const ctx = c.getContext('2d');
+
+    // База
+    ctx.fillStyle = '#2D5A1E';
+    ctx.fillRect(0, 0, size, size);
+
+    // Пятна листвы
+    for (let i = 0; i < 300; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 2 + Math.random() * 5;
+        const h = 2 + Math.random() * 5;
+
+        const colors = ['#1D4A0E', '#3D6A2E', '#4D7A3E', '#2A5A18'];
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.fillRect(x, y, w, h);
+    }
+
+    // Прозрачные "дырки" (чёрные точки)
+    for (let i = 0; i < 80; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        ctx.fillStyle = '#0A2A05';
+        ctx.fillRect(x, y, 2, 2);
+    }
+
+    return c;
+}
+
+// ============================================================
+// МАТЕРИАЛЫ
+// ============================================================
 
 function createGrassMaterial() {
-    const topTex = createTexture('#5aad3a');
-    const sideTex = createTexture('#8B6535');
-    const bottomTex = createTexture('#6B4513');
-
-    const topMat = new THREE.MeshLambertMaterial({ map: topTex });
-    const sideMat = new THREE.MeshLambertMaterial({ map: sideTex });
-    const bottomMat = new THREE.MeshLambertMaterial({ map: bottomTex });
+    const topMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeGrassTopTexture()) });
+    const sideMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeGrassSideTexture()) });
+    const bottomMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeDirtTexture()) });
 
     return [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat];
 }
 
 function createStoneMaterial() {
-    const tex = createTexture('#808080');
-    return new THREE.MeshLambertMaterial({ map: tex });
+    return new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeStoneTexture()) });
 }
 
 function createWoodMaterial() {
-    const tex = createTexture('#6B4423');
-    return new THREE.MeshLambertMaterial({ map: tex });
+    const sideMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeWoodSideTexture()) });
+    const topMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeWoodTopTexture()) });
+
+    // Для дерева: бока — кора, верх/низ — кольца
+    return [sideMat, sideMat, topMat, topMat, sideMat, sideMat];
 }
 
 function createLeafMaterial() {
-    const tex = createTexture('#2d5a1e');
-    return new THREE.MeshLambertMaterial({ map: tex });
+    return new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeLeafTexture()) });
 }
 
 function createDirtMaterial() {
-    const tex = createTexture('#5a3a1a');
-    return new THREE.MeshLambertMaterial({ map: tex });
+    return new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeDirtTexture()) });
 }
 
 // ============================================================
-// ИНВЕНТАРЬ — список доступных блоков
+// ИНВЕНТАРЬ
 // ============================================================
 
 const INVENTORY = [
@@ -119,7 +359,7 @@ const INVENTORY = [
     { name: 'Земля',  material: createDirtMaterial(),   icon: '🟤' }
 ];
 
-let selectedSlot = 0; // индекс текущего блока
+let selectedSlot = 0;
 
 // ============ БЛОКИ ============
 
@@ -318,7 +558,6 @@ document.addEventListener('keydown', (e) => {
     if (normalizedKey === 'v') {
         toggleCamera();
     }
-    // Клавиши 1-5 — выбор блока
     if (['1', '2', '3', '4', '5'].includes(key)) {
         selectSlot(parseInt(key) - 1);
     }
@@ -330,7 +569,6 @@ document.addEventListener('keyup', (e) => {
     keys[normalizedKey] = false;
 });
 
-// Колесо мыши — переключение блоков
 document.addEventListener('wheel', (e) => {
     if (isPointerLocked) {
         if (e.deltaY > 0) {
@@ -363,7 +601,6 @@ function selectSlot(index) {
     if (index < 0 || index >= INVENTORY.length) return;
     selectedSlot = index;
 
-    // Обновляем визуально слоты
     document.querySelectorAll('.inv-slot').forEach((el, i) => {
         if (i === index) {
             el.classList.add('active');
@@ -372,7 +609,6 @@ function selectSlot(index) {
         }
     });
 
-    // HUD с именем блока
     const item = INVENTORY[index];
     document.getElementById('selected-block').textContent = item.name;
 }
@@ -456,7 +692,6 @@ function placeBlock() {
 
     if (newPos.y < 0) return;
 
-    // Ставим блок из инвентаря (текущий выбранный)
     createBlock(newPos.x, newPos.y, newPos.z, INVENTORY[selectedSlot].material);
 }
 
@@ -600,5 +835,5 @@ if (!isMobile) {
     mobileOnly.forEach(el => el.style.display = 'none');
 }
 
-// ============ ИНИЦИАЛИЗАЦИЯ ИНВЕНТАРЯ UI ============
+// ============ ИНИЦИАЛИЗАЦИЯ ============
 selectSlot(0);
