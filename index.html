@@ -27,14 +27,15 @@
 
         <div id="inventory-bar"></div>
 
-        <!-- Инвентарь -->
+        <!-- ИНВЕНТАРЬ + КРАФТ В ОДНОМ ОКНЕ -->
         <div id="inventory-modal">
             <div class="inv-modal-content">
                 <div class="inv-modal-header">
-                    <h2>🎒 Инвентарь</h2>
+                    <h2>🎒 Инвентарь и Крафт</h2>
                     <button class="inv-modal-close">✖</button>
                 </div>
 
+                <!-- Превью игрока -->
                 <div class="inv-player-preview">
                     <canvas id="player-preview" width="80" height="120"></canvas>
                     <div class="inv-player-stats">
@@ -53,20 +54,9 @@
                     </div>
                 </div>
 
-                <div id="inventory-modal-grid" class="inv-modal-grid"></div>
-                <div class="inv-modal-hint">Нажми на блок • Y или Esc — закрыть</div>
-            </div>
-        </div>
-
-        <!-- Крафт -->
-        <div id="crafting-modal">
-            <div class="craft-modal-content">
-                <div class="inv-modal-header">
-                    <h2>🔨 Крафт</h2>
-                    <button class="craft-modal-close">✖</button>
-                </div>
-
-                <div class="craft-section">
+                <!-- КРАФТ 3x3 -->
+                <div class="craft-section-inv">
+                    <div class="craft-label">🔨 КРАФТ</div>
                     <div class="craft-grid-wrapper">
                         <div id="crafting-grid" class="craft-grid"></div>
                         <div class="craft-arrow">→</div>
@@ -75,17 +65,15 @@
                             <div id="crafting-result-name" class="craft-result-name">...</div>
                         </div>
                     </div>
+                    <div class="craft-actions">
+                        <button id="craft-btn" class="craft-action-btn">✨ Создать</button>
+                        <button id="craft-reset-btn" class="craft-action-btn reset">🔄 Сброс</button>
+                    </div>
                 </div>
 
-                <div class="craft-actions">
-                    <button id="craft-btn" class="craft-action-btn">✨ Создать</button>
-                    <button id="craft-reset-btn" class="craft-action-btn reset">🔄 Сброс</button>
-                </div>
-
-                <div class="craft-blocks-label">Нажми на блок, чтобы добавить его в сетку:</div>
-                <div id="crafting-blocks" class="craft-blocks"></div>
-
-                <div class="inv-modal-hint">R — закрыть • Клик по слоту сетки — убрать</div>
+                <!-- Все блоки -->
+                <div class="craft-label">📦 БЛОКИ (нажми — добавить в крафт)</div>
+                <div id="inventory-modal-grid" class="inv-modal-grid"></div>
             </div>
         </div>
 
@@ -111,7 +99,7 @@
             <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
         </div>
 
-        <div id="hint">Y — инвентарь • R — крафт • V — камера • ЛКМ поставить • ПКМ сломать</div>
+        <div id="hint">Y — инвентарь и крафт • V — камера • ЛКМ поставить • ПКМ сломать</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
