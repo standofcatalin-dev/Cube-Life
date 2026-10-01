@@ -92,10 +92,30 @@ html, body {
     transform: scale(0.9);
 }
 
-/* ============================================================
-   HOTBAR (панель быстрого доступа как в Minecraft)
-   ============================================================ */
+/* ===== ИНФО О БЛОКЕ ===== */
+#selected-block-info {
+    position: absolute;
+    bottom: 95px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.75);
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    z-index: 10;
+    pointer-events: none;
+}
 
+#selected-block {
+    color: #ffc800;
+    font-weight: bold;
+}
+
+/* ============================================================
+   HOTBAR
+   ============================================================ */
 #inventory-bar {
     position: absolute;
     bottom: 20px;
@@ -131,7 +151,6 @@ html, body {
     border-color: #5a5a5a;
 }
 
-/* Активный слот — белая рамка как в Minecraft */
 .inv-slot.active {
     border: 3px solid #ffffff;
     background: rgba(180, 180, 180, 0.7);
@@ -140,7 +159,6 @@ html, body {
     z-index: 5;
 }
 
-/* Иконка блока (canvas-картинка) */
 .inv-icon-img {
     width: 44px;
     height: 44px;
@@ -151,7 +169,6 @@ html, body {
     pointer-events: none;
 }
 
-/* Номер слота в углу */
 .inv-num {
     position: absolute;
     top: 2px;
@@ -161,6 +178,152 @@ html, body {
     color: #ffffff;
     text-shadow: 1px 1px 0 #000000, 1px 1px 3px #000000;
     pointer-events: none;
+}
+
+/* ============================================================
+   БОЛЬШОЙ ИНВЕНТАРЬ (модальное окно)
+   ============================================================ */
+#inventory-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+#inventory-modal.open {
+    display: flex;
+    animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.inv-modal-content {
+    background: rgba(30, 30, 30, 0.95);
+    border: 3px solid #5a5a5a;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.inv-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #5a5a5a;
+    padding-bottom: 12px;
+}
+
+.inv-modal-header h2 {
+    font-size: 20px;
+    color: #ffffff;
+}
+
+.inv-modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 2px solid #ff4444;
+    background: rgba(0, 0, 0, 0.5);
+    color: #ff4444;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.inv-modal-close:hover {
+    background: rgba(255, 68, 68, 0.3);
+}
+
+.inv-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.inv-modal-slot {
+    aspect-ratio: 1;
+    background: rgba(139, 139, 139, 0.3);
+    border: 2px solid #5a5a5a;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    padding: 8px;
+}
+
+.inv-modal-slot:hover {
+    background: rgba(160, 160, 160, 0.5);
+    border-color: #8a8a8a;
+    transform: scale(1.03);
+}
+
+.inv-modal-slot.active {
+    border: 3px solid #ffc800;
+    background: rgba(255, 200, 0, 0.2);
+    box-shadow: 0 0 20px rgba(255, 200, 0, 0.6);
+}
+
+.inv-modal-slot .inv-icon-img {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 6px;
+}
+
+.inv-modal-name {
+    font-size: 12px;
+    color: #ffffff;
+    text-align: center;
+    font-weight: bold;
+}
+
+.inv-modal-hint {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 8px;
+}
+
+/* ===== КНОПКА ИНВЕНТАРЯ (для мобильных) ===== */
+#inventory-toggle-btn {
+    position: absolute;
+    top: 90px;
+    right: 80px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid #7eff7e;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+#inventory-toggle-btn:active {
+    background: rgba(126, 255, 126, 0.4);
+    transform: scale(0.9);
 }
 
 /* ===== УПРАВЛЕНИЕ ===== */
