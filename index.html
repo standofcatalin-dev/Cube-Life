@@ -11,6 +11,27 @@
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
 
+        <!-- МЕНЮ ПРИ ВХОДЕ -->
+        <div id="start-menu">
+            <div class="menu-content">
+                <div class="menu-title">⬛ CUBE LIFE</div>
+                <canvas id="menu-player-canvas" width="160" height="240"></canvas>
+                <div class="menu-subtitle">Выбери режим</div>
+                <button class="menu-btn game" onclick="startGame('survival64')">
+                    🎮 Играть
+                    <span class="menu-hint">По 64 блока</span>
+                </button>
+                <button class="menu-btn survival" onclick="startGame('survival0')">
+                    🏆 Выживание
+                    <span class="menu-hint">С нуля</span>
+                </button>
+                <button class="menu-btn creative" onclick="startGame('creative')">
+                    🎨 Творчество
+                    <span class="menu-hint">По 999 блоков</span>
+                </button>
+            </div>
+        </div>
+
         <div id="hud">
             <div class="hud-title">⬛ CUBE LIFE</div>
             <div class="hud-right">
