@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 16: Улучшенный НПС + Анимация + Графика
+// CUBE LIFE — Этап 17: Перемещаемые кнопки для телефона
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -19,7 +19,6 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-// Улучшенное освещение
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 
@@ -39,10 +38,6 @@ sunLight.shadow.camera.near = 0.5;
 sunLight.shadow.camera.far = 100;
 sunLight.shadow.bias = -0.0005;
 scene.add(sunLight);
-
-// ============================================================
-// ХЕЛПЕРЫ
-// ============================================================
 
 function lightenColor(hex, percent) {
     const num = parseInt(hex.replace('#', ''), 16);
@@ -181,6 +176,7 @@ let selectedSlot = 0;
 let inventoryOpen = false;
 let pauseOpen = false;
 let gameStarted = false;
+let editingButtons = false;
 
 const ICON_CACHE = {};
 const fallingBlocks = [];
@@ -215,26 +211,17 @@ function removeBlock(mesh) {
 
 function checkPhysics(x, y, z) {
     const under = blockMap.get(blockKey(x, y - 1, z));
-    if (!under && y > 0) {
-        startFalling(x, y, z);
-    }
+    if (!under && y > 0) startFalling(x, y, z);
 }
 
 function startFalling(x, y, z) {
     const mesh = blockMap.get(blockKey(x, y, z));
     if (!mesh) return;
-
     const blockId = mesh.userData.blockId;
     if (!ALL_BLOCKS[blockId].physics) return;
-
     const key = blockKey(x, y, z);
     blockMap.delete(key);
-
-    fallingBlocks.push({
-        mesh: mesh,
-        blockId: blockId,
-        vy: 0
-    });
+    fallingBlocks.push({ mesh, blockId, vy: 0 });
 }
 
 const WORLD_SIZE = 8;
@@ -304,18 +291,11 @@ highlightBox.visible = false;
 scene.add(highlightBox);
 
 // ============================================================
-// ЧЕЛОВЕЧЕК — РАЗДЕЛЬНЫЕ ЧАСТИ ДЛЯ АНИМАЦИИ
+// ЧЕЛОВЕЧЕК
 // ============================================================
 
 const human = new THREE.Group();
-const humanParts = {
-    head: null,
-    body: null,
-    leftArm: null,
-    rightArm: null,
-    leftLeg: null,
-    rightLeg: null
-};
+const humanParts = { head: null, body: null, leftArm: null, rightArm: null, leftLeg: null, rightLeg: null };
 
 function buildHuman() {
     const skinMat = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
@@ -324,75 +304,57 @@ function buildHuman() {
     const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
     const hairMat = new THREE.MeshLambertMaterial({ color: 0x4a2c0a });
 
-    // === ТЕЛО ===
     const bodyGroup = new THREE.Group();
     bodyGroup.position.y = 1.15;
-
     const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.7, 0.3), shirtMat);
     bodyMesh.castShadow = true;
     bodyGroup.add(bodyMesh);
-
-    // Рубашка — полоски снизу
     const shirtStripe = new THREE.Mesh(
         new THREE.BoxGeometry(0.56, 0.1, 0.31),
         new THREE.MeshLambertMaterial({ color: 0x2244aa })
     );
     shirtStripe.position.y = -0.3;
     bodyGroup.add(shirtStripe);
-
     human.add(bodyGroup);
     humanParts.body = bodyGroup;
 
-    // === ГОЛОВА ===
     const headGroup = new THREE.Group();
     headGroup.position.y = 1.75;
-
     const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
     headMesh.castShadow = true;
     headGroup.add(headMesh);
 
-    // Волосы
     const hairTop = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.52), hairMat);
     hairTop.position.y = 0.25;
     headGroup.add(hairTop);
-
     const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.4, 0.08), hairMat);
     hairBack.position.set(0, 0.05, -0.25);
     headGroup.add(hairBack);
-
     const hairLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.52), hairMat);
     hairLeft.position.set(-0.25, 0.05, 0);
     headGroup.add(hairLeft);
-
     const hairRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.52), hairMat);
     hairRight.position.set(0.25, 0.05, 0);
     headGroup.add(hairRight);
 
-    // Глаза (более детальные)
     const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const eyeIrisMat = new THREE.MeshBasicMaterial({ color: 0x3366cc });
     const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-
     const eyeWhiteGeom = new THREE.BoxGeometry(0.14, 0.14, 0.02);
     const eyePupilGeom = new THREE.BoxGeometry(0.08, 0.08, 0.03);
 
     const eyeLeftWhite = new THREE.Mesh(eyeWhiteGeom, eyeWhiteMat);
     eyeLeftWhite.position.set(-0.12, 0.05, 0.26);
     headGroup.add(eyeLeftWhite);
-
     const eyeRightWhite = new THREE.Mesh(eyeWhiteGeom, eyeWhiteMat);
     eyeRightWhite.position.set(0.12, 0.05, 0.26);
     headGroup.add(eyeRightWhite);
-
     const eyeLeftPupil = new THREE.Mesh(eyePupilGeom, eyePupilMat);
     eyeLeftPupil.position.set(-0.12, 0.05, 0.27);
     headGroup.add(eyeLeftPupil);
-
     const eyeRightPupil = new THREE.Mesh(eyePupilGeom, eyePupilMat);
     eyeRightPupil.position.set(0.12, 0.05, 0.27);
     headGroup.add(eyeRightPupil);
 
-    // Рот
     const mouth = new THREE.Mesh(
         new THREE.BoxGeometry(0.15, 0.02, 0.02),
         new THREE.MeshBasicMaterial({ color: 0xcc6666 })
@@ -403,67 +365,51 @@ function buildHuman() {
     human.add(headGroup);
     humanParts.head = headGroup;
 
-    // === ЛЕВАЯ РУКА ===
     const leftArmGroup = new THREE.Group();
-    leftArmGroup.position.set(-0.4, 1.5, 0); // Верхняя точка — точка вращения
-
+    leftArmGroup.position.set(-0.4, 1.5, 0);
     const leftArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.65, 0.2), shirtMat);
     leftArmMesh.position.y = -0.32;
     leftArmMesh.castShadow = true;
     leftArmGroup.add(leftArmMesh);
-
     const leftHand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.2), skinMat);
     leftHand.position.y = -0.72;
     leftArmGroup.add(leftHand);
-
     human.add(leftArmGroup);
     humanParts.leftArm = leftArmGroup;
 
-    // === ПРАВАЯ РУКА ===
     const rightArmGroup = new THREE.Group();
     rightArmGroup.position.set(0.4, 1.5, 0);
-
     const rightArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.65, 0.2), shirtMat);
     rightArmMesh.position.y = -0.32;
     rightArmMesh.castShadow = true;
     rightArmGroup.add(rightArmMesh);
-
     const rightHand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.2), skinMat);
     rightHand.position.y = -0.72;
     rightArmGroup.add(rightHand);
-
     human.add(rightArmGroup);
     humanParts.rightArm = rightArmGroup;
 
-    // === ЛЕВАЯ НОГА ===
     const leftLegGroup = new THREE.Group();
     leftLegGroup.position.set(-0.15, 0.8, 0);
-
     const leftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.6, 0.22), pantsMat);
     leftLegMesh.position.y = -0.3;
     leftLegMesh.castShadow = true;
     leftLegGroup.add(leftLegMesh);
-
     const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.28), shoeMat);
     leftShoe.position.set(0, -0.65, 0.02);
     leftLegGroup.add(leftShoe);
-
     human.add(leftLegGroup);
     humanParts.leftLeg = leftLegGroup;
 
-    // === ПРАВАЯ НОГА ===
     const rightLegGroup = new THREE.Group();
     rightLegGroup.position.set(0.15, 0.8, 0);
-
     const rightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.6, 0.22), pantsMat);
     rightLegMesh.position.y = -0.3;
     rightLegMesh.castShadow = true;
     rightLegGroup.add(rightLegMesh);
-
     const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.28), shoeMat);
     rightShoe.position.set(0, -0.65, 0.02);
     rightLegGroup.add(rightShoe);
-
     human.add(rightLegGroup);
     humanParts.rightLeg = rightLegGroup;
 
@@ -472,10 +418,6 @@ function buildHuman() {
 }
 
 buildHuman();
-
-// ============================================================
-// МЕНЮ — РИСУЕМ ЧЕЛОВЕЧКА
-// ============================================================
 
 function drawMenuPlayer() {
     const c = document.getElementById('menu-player-canvas');
@@ -506,7 +448,6 @@ function drawMenuPlayer() {
     ctx.fillStyle = '#333366';
     ctx.fillRect(cx - 22, cy - 40, 18, 40);
     ctx.fillRect(cx + 4, cy - 40, 18, 40);
-
     ctx.fillStyle = '#222222';
     ctx.fillRect(cx - 24, cy - 10, 22, 10);
     ctx.fillRect(cx + 2, cy - 10, 22, 10);
@@ -524,7 +465,6 @@ function drawMenuPlayer() {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(cx - 14, cy - 128, 8, 8);
     ctx.fillRect(cx + 6, cy - 128, 8, 8);
-
     ctx.fillStyle = '#000000';
     ctx.fillRect(cx - 12, cy - 126, 4, 4);
     ctx.fillRect(cx + 8, cy - 126, 4, 4);
@@ -539,6 +479,241 @@ function drawMenuPlayer() {
 }
 
 drawMenuPlayer();
+
+// ============================================================
+// ПЕРЕМЕЩАЕМЫЕ КНОПКИ (Draggable Buttons)
+// ============================================================
+
+const BUTTON_POSITIONS_KEY = 'cubeLifeBtnPositions';
+
+// Дефолтные позиции (в процентах от размера экрана)
+const DEFAULT_POSITIONS = {
+    'a': { x: 10, y: 80 },
+    'd': { x: 25, y: 80 },
+    'w': { x: 82, y: 70 },
+    's': { x: 82, y: 85 },
+    'jump': { x: 88, y: 50 },
+    'crouch': { x: 12, y: 50 },
+    'break': { x: 30, y: 65 },
+    'place': { x: 70, y: 65 },
+    'inventory': { x: 92, y: 20 },
+    'camera': { x: 92, y: 12 }
+};
+
+let buttonPositions = {};
+
+function loadButtonPositions() {
+    try {
+        const saved = localStorage.getItem(BUTTON_POSITIONS_KEY);
+        if (saved) {
+            buttonPositions = JSON.parse(saved);
+        } else {
+            buttonPositions = { ...DEFAULT_POSITIONS };
+        }
+    } catch (e) {
+        buttonPositions = { ...DEFAULT_POSITIONS };
+    }
+}
+
+function saveButtonPositions() {
+    try {
+        localStorage.setItem(BUTTON_POSITIONS_KEY, JSON.stringify(buttonPositions));
+    } catch (e) {}
+}
+
+function applyButtonPosition(btnId, xPercent, yPercent) {
+    const btn = document.getElementById(`btn-${btnId}`);
+    if (!btn) return;
+    btn.style.left = xPercent + '%';
+    btn.style.top = yPercent + '%';
+    btn.style.transform = 'translate(-50%, -50%)';
+}
+
+function applyAllPositions() {
+    for (const id in buttonPositions) {
+        applyButtonPosition(id, buttonPositions[id].x, buttonPositions[id].y);
+    }
+}
+
+function resetButtonPositions() {
+    buttonPositions = { ...DEFAULT_POSITIONS };
+    saveButtonPositions();
+    applyAllPositions();
+}
+window.resetButtonPositions = resetButtonPositions;
+
+// Drag & Drop
+function setupDraggableButtons() {
+    const buttons = document.querySelectorAll('.mobile-btn');
+
+    buttons.forEach(btn => {
+        let isDragging = false;
+        let startX, startY;
+
+        const startDrag = (e) => {
+            if (!editingButtons) return;
+            isDragging = true;
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            btn.style.zIndex = 999;
+            e.preventDefault();
+        };
+
+        const moveDrag = (e) => {
+            if (!isDragging || !editingButtons) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const x = touch.clientX;
+            const y = touch.clientY;
+
+            const xPercent = (x / window.innerWidth) * 100;
+            const yPercent = (y / window.innerHeight) * 100;
+
+            const clampedX = Math.max(5, Math.min(95, xPercent));
+            const clampedY = Math.max(5, Math.min(95, yPercent));
+
+            btn.style.left = clampedX + '%';
+            btn.style.top = clampedY + '%';
+
+            const btnId = btn.getAttribute('data-btn');
+            buttonPositions[btnId] = { x: clampedX, y: clampedY };
+            e.preventDefault();
+        };
+
+        const endDrag = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            btn.style.zIndex = 10;
+            saveButtonPositions();
+        };
+
+        btn.addEventListener('touchstart', startDrag, { passive: false });
+        btn.addEventListener('touchmove', moveDrag, { passive: false });
+        btn.addEventListener('touchend', endDrag);
+        btn.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', moveDrag);
+        document.addEventListener('mouseup', endDrag);
+    });
+}
+
+function toggleEditMode() {
+    editingButtons = !editingButtons;
+    const hint = document.getElementById('edit-hint');
+    const editBtn = document.getElementById('edit-toggle-btn');
+
+    if (editingButtons) {
+        document.body.classList.add('editing');
+        if (hint) hint.classList.add('show');
+        if (editBtn) editBtn.classList.add('active');
+        // Закрываем паузу
+        if (pauseOpen) closePause();
+    } else {
+        document.body.classList.remove('editing');
+        if (hint) hint.classList.remove('show');
+        if (editBtn) editBtn.classList.remove('active');
+    }
+}
+window.toggleEditMode = toggleEditMode;
+
+loadButtonPositions();
+applyAllPositions();
+setupDraggableButtons();
+
+const editToggleBtn = document.getElementById('edit-toggle-btn');
+if (editToggleBtn) editToggleBtn.onclick = toggleEditMode;
+
+// ============================================================
+// НАЗНАЧЕНИЕ ДЕЙСТВИЙ КНОПКАМ
+// ============================================================
+
+function setupButtonActions() {
+    // Движение
+    const btnA = document.getElementById('btn-a');
+    const btnD = document.getElementById('btn-d');
+    const btnW = document.getElementById('btn-w');
+    const btnS = document.getElementById('btn-s');
+
+    if (btnA) {
+        btnA.addEventListener('touchstart', (e) => { if (!editingButtons) pressKey('a'); e.preventDefault(); }, { passive: false });
+        btnA.addEventListener('touchend', () => { if (!editingButtons) releaseKey('a'); });
+        btnA.addEventListener('mousedown', () => { if (!editingButtons) pressKey('a'); });
+        btnA.addEventListener('mouseup', () => { if (!editingButtons) releaseKey('a'); });
+    }
+    if (btnD) {
+        btnD.addEventListener('touchstart', (e) => { if (!editingButtons) pressKey('d'); e.preventDefault(); }, { passive: false });
+        btnD.addEventListener('touchend', () => { if (!editingButtons) releaseKey('d'); });
+        btnD.addEventListener('mousedown', () => { if (!editingButtons) pressKey('d'); });
+        btnD.addEventListener('mouseup', () => { if (!editingButtons) releaseKey('d'); });
+    }
+    if (btnW) {
+        btnW.addEventListener('touchstart', (e) => { if (!editingButtons) pressKey('w'); e.preventDefault(); }, { passive: false });
+        btnW.addEventListener('touchend', () => { if (!editingButtons) releaseKey('w'); });
+        btnW.addEventListener('mousedown', () => { if (!editingButtons) pressKey('w'); });
+        btnW.addEventListener('mouseup', () => { if (!editingButtons) releaseKey('w'); });
+    }
+    if (btnS) {
+        btnS.addEventListener('touchstart', (e) => { if (!editingButtons) pressKey('s'); e.preventDefault(); }, { passive: false });
+        btnS.addEventListener('touchend', () => { if (!editingButtons) releaseKey('s'); });
+        btnS.addEventListener('mousedown', () => { if (!editingButtons) pressKey('s'); });
+        btnS.addEventListener('mouseup', () => { if (!editingButtons) releaseKey('s'); });
+    }
+
+    // Прыжок
+    const btnJump = document.getElementById('btn-jump');
+    if (btnJump) {
+        btnJump.addEventListener('click', (e) => {
+            if (editingButtons) return;
+            jump();
+        });
+    }
+
+    // Присед
+    const btnCrouch = document.getElementById('btn-crouch');
+    if (btnCrouch) {
+        btnCrouch.addEventListener('touchstart', (e) => { if (!editingButtons) { crouchStart(); e.preventDefault(); } }, { passive: false });
+        btnCrouch.addEventListener('touchend', () => { if (!editingButtons) crouchEnd(); });
+        btnCrouch.addEventListener('mousedown', () => { if (!editingButtons) crouchStart(); });
+        btnCrouch.addEventListener('mouseup', () => { if (!editingButtons) crouchEnd(); });
+    }
+
+    // Ломать
+    const btnBreak = document.getElementById('btn-break');
+    if (btnBreak) {
+        btnBreak.addEventListener('click', () => {
+            if (editingButtons) return;
+            breakBlock();
+        });
+    }
+
+    // Ставить
+    const btnPlace = document.getElementById('btn-place');
+    if (btnPlace) {
+        btnPlace.addEventListener('click', () => {
+            if (editingButtons) return;
+            placeBlock();
+        });
+    }
+
+    // Инвентарь
+    const btnInv = document.getElementById('btn-inventory');
+    if (btnInv) {
+        btnInv.addEventListener('click', () => {
+            if (editingButtons) return;
+            toggleInventory();
+        });
+    }
+
+    // Камера
+    const btnCam = document.getElementById('btn-camera');
+    if (btnCam) {
+        btnCam.addEventListener('click', () => {
+            if (editingButtons) return;
+            toggleCamera();
+        });
+    }
+}
+
+setupButtonActions();
 
 // ============================================================
 // СТАРТ ИГРЫ
@@ -583,6 +758,7 @@ window.startGame = startGame;
 function openPause() {
     if (!gameStarted) return;
     if (inventoryOpen) return;
+    if (editingButtons) return;
     pauseOpen = true;
     const el = document.getElementById('pause-menu');
     if (el) el.classList.add('open');
@@ -621,10 +797,6 @@ function exitToMenu() {
 }
 window.exitToMenu = exitToMenu;
 
-// ============================================================
-// УПРАВЛЕНИЕ
-// ============================================================
-
 const keys = {};
 const player = { x: 0, z: 0, y: 0, vy: 0, angle: 0, speed: 0.08, turnSpeed: 0.05, isJumping: false, isCrouching: false };
 const GRAVITY = -0.015;
@@ -633,8 +805,6 @@ const JUMP_FORCE = 0.18;
 let cameraMode = 3;
 let cameraFollowAngle = 0;
 let cameraPitchAngle = 0;
-
-// Анимация ходьбы
 let walkAnimation = 0;
 let isWalking = false;
 
@@ -645,6 +815,7 @@ document.addEventListener('keydown', (e) => {
     const normalizedKey = KEY_MAP[key] || key;
 
     if (key === 'escape') {
+        if (editingButtons) { toggleEditMode(); return; }
         if (inventoryOpen) { toggleInventory(); return; }
         if (pauseOpen) { closePause(); return; }
         if (gameStarted) { openPause(); return; }
@@ -745,7 +916,7 @@ let isPointerLocked = false;
 
 if (!isMobile) {
     canvas.addEventListener('click', () => {
-        if (!isPointerLocked && !inventoryOpen && !pauseOpen && gameStarted) {
+        if (!isPointerLocked && !inventoryOpen && !pauseOpen && !editingButtons && gameStarted) {
             canvas.requestPointerLock().catch(err => console.log(err));
         }
     });
@@ -753,8 +924,7 @@ if (!isMobile) {
     document.addEventListener('pointerlockchange', () => {
         const wasLocked = isPointerLocked;
         isPointerLocked = document.pointerLockElement === canvas;
-
-        if (wasLocked && !isPointerLocked && gameStarted && !inventoryOpen && !pauseOpen) {
+        if (wasLocked && !isPointerLocked && gameStarted && !inventoryOpen && !pauseOpen && !editingButtons) {
             openPause();
         }
     });
@@ -890,10 +1060,6 @@ if (isMobile) {
     }, { passive: true });
 }
 
-// ============================================================
-// АНИМАЦИЯ ХОДЬБЫ
-// ============================================================
-
 function updateWalkAnimation() {
     const moving = (keys['w'] || keys['s'] || keys['arrowup'] || keys['arrowdown']) && gameStarted && !pauseOpen && !inventoryOpen;
 
@@ -905,25 +1071,14 @@ function updateWalkAnimation() {
         isWalking = false;
     }
 
-    // Плавное затухание
     const swing = isWalking ? Math.sin(walkAnimation) * 0.7 : 0;
     const targetSwing = isWalking ? swing : 0;
 
-    // Применяем плавно (интерполяция)
-    if (humanParts.leftArm) {
-        humanParts.leftArm.rotation.x += (targetSwing - humanParts.leftArm.rotation.x) * 0.3;
-    }
-    if (humanParts.rightArm) {
-        humanParts.rightArm.rotation.x += (-targetSwing - humanParts.rightArm.rotation.x) * 0.3;
-    }
-    if (humanParts.leftLeg) {
-        humanParts.leftLeg.rotation.x += (-targetSwing * 0.8 - humanParts.leftLeg.rotation.x) * 0.3;
-    }
-    if (humanParts.rightLeg) {
-        humanParts.rightLeg.rotation.x += (targetSwing * 0.8 - humanParts.rightLeg.rotation.x) * 0.3;
-    }
+    if (humanParts.leftArm) humanParts.leftArm.rotation.x += (targetSwing - humanParts.leftArm.rotation.x) * 0.3;
+    if (humanParts.rightArm) humanParts.rightArm.rotation.x += (-targetSwing - humanParts.rightArm.rotation.x) * 0.3;
+    if (humanParts.leftLeg) humanParts.leftLeg.rotation.x += (-targetSwing * 0.8 - humanParts.leftLeg.rotation.x) * 0.3;
+    if (humanParts.rightLeg) humanParts.rightLeg.rotation.x += (targetSwing * 0.8 - humanParts.rightLeg.rotation.x) * 0.3;
 
-    // Покачивание тела
     if (humanParts.body) {
         const bob = isWalking ? Math.abs(Math.sin(walkAnimation * 2)) * 0.05 : 0;
         humanParts.body.position.y = 1.15 + bob;
@@ -933,17 +1088,12 @@ function updateWalkAnimation() {
         humanParts.head.position.y = 1.75 + headBob;
     }
 
-    // Присед — наклон головы вперёд
     if (player.isCrouching && humanParts.head) {
         humanParts.head.rotation.x = 0.3;
     } else if (humanParts.head) {
         humanParts.head.rotation.x += (0 - humanParts.head.rotation.x) * 0.2;
     }
 }
-
-// ============================================================
-// ОБНОВЛЕНИЕ
-// ============================================================
 
 function update() {
     if (!inventoryOpen && !pauseOpen && gameStarted) {
@@ -977,10 +1127,8 @@ function update() {
     human.position.y = player.y + 0.5 + crouchOffset;
     human.rotation.y = player.angle;
 
-    // Анимация ходьбы
     updateWalkAnimation();
 
-    // Камера
     if (cameraMode === 3) {
         if (keys['left']) cameraFollowAngle += 0.03;
         if (keys['right']) cameraFollowAngle -= 0.03;
@@ -1035,9 +1183,7 @@ function update() {
             const above = blockMap.get(blockKey(x, y + 1, z));
             if (above) {
                 const aboveId = above.userData.blockId;
-                if (ALL_BLOCKS[aboveId].physics) {
-                    startFalling(x, y + 1, z);
-                }
+                if (ALL_BLOCKS[aboveId].physics) startFalling(x, y + 1, z);
             }
         }
     }
@@ -1070,16 +1216,8 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    applyAllPositions();
 });
-
-if (!isMobile) {
-    const mobileOnly = document.querySelectorAll('.mobile-only');
-    mobileOnly.forEach(el => el.style.display = 'none');
-}
-
-// ============================================================
-// ИКОНКИ
-// ============================================================
 
 function makeInvIcon(color, secondaryColor) {
     const size = 64;
@@ -1164,7 +1302,6 @@ function drawPlayerPreview() {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(cx - 7, cy - 64, 5, 5);
     ctx.fillRect(cx + 2, cy - 64, 5, 5);
-
     ctx.fillStyle = '#000000';
     ctx.fillRect(cx - 6, cy - 63, 3, 3);
     ctx.fillRect(cx + 3, cy - 63, 3, 3);
@@ -1314,9 +1451,7 @@ function craftItem() {
     if (blockCounts[matched.output] === undefined) blockCounts[matched.output] = 0;
     blockCounts[matched.output]++;
 
-    if (!unlockedBlocks.includes(matched.output)) {
-        unlockedBlocks.push(matched.output);
-    }
+    if (!unlockedBlocks.includes(matched.output)) unlockedBlocks.push(matched.output);
 
     craftingGrid = {};
     renderCraftingGrid();
@@ -1409,27 +1544,6 @@ function initInventoryModal() {
     });
 }
 
-const yBtn = document.createElement('button');
-yBtn.id = 'inventory-toggle-btn';
-yBtn.innerHTML = '🎒';
-yBtn.onclick = toggleInventory;
-document.body.appendChild(yBtn);
-
-const jumpBtn = document.createElement('button');
-jumpBtn.id = 'jump-btn';
-jumpBtn.innerHTML = '🔼';
-jumpBtn.onclick = jump;
-document.body.appendChild(jumpBtn);
-
-const crouchBtn = document.createElement('button');
-crouchBtn.id = 'crouch-btn';
-crouchBtn.innerHTML = '🔽';
-crouchBtn.ontouchstart = crouchStart;
-crouchBtn.ontouchend = crouchEnd;
-crouchBtn.onmousedown = crouchStart;
-crouchBtn.onmouseup = crouchEnd;
-document.body.appendChild(crouchBtn);
-
 const closeBtn = document.querySelector('.inv-modal-close');
 if (closeBtn) closeBtn.onclick = toggleInventory;
 
@@ -1441,6 +1555,14 @@ if (resetBtn) resetBtn.onclick = resetCrafting;
 
 const pauseResumeBtn = document.getElementById('pause-resume-btn');
 if (pauseResumeBtn) pauseResumeBtn.onclick = closePause;
+
+const pauseEditBtn = document.getElementById('pause-edit-btn');
+if (pauseEditBtn) {
+    pauseEditBtn.onclick = () => {
+        closePause();
+        toggleEditMode();
+    };
+}
 
 const pauseExitBtn = document.getElementById('pause-exit-btn');
 if (pauseExitBtn) pauseExitBtn.onclick = exitToMenu;
