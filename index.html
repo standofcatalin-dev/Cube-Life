@@ -35,6 +35,7 @@
             <div class="pause-content">
                 <div class="pause-title">⏸ ПАУЗА</div>
                 <button id="pause-resume-btn" class="pause-btn resume">▶ Продолжить</button>
+                <button id="pause-edit-btn" class="pause-btn edit">⚙️ Настроить кнопки</button>
                 <button id="pause-exit-btn" class="pause-btn exit">🚪 Выйти в меню</button>
                 <div class="pause-hint">Esc — продолжить</div>
             </div>
@@ -48,7 +49,25 @@
             </div>
         </div>
 
-        <button id="camera-btn" onclick="toggleCamera()">📷</button>
+        <!-- ⚙️ КНОПКА РЕЖИМА РЕДАКТИРОВАНИЯ -->
+        <button id="edit-toggle-btn" title="Настроить кнопки">⚙️</button>
+
+        <!-- МОБИЛЬНЫЕ КНОПКИ (перемещаемые) -->
+        <button id="btn-a" class="mobile-btn" data-btn="a">◀</button>
+        <button id="btn-d" class="mobile-btn" data-btn="d">▶</button>
+        <button id="btn-w" class="mobile-btn" data-btn="w">▲</button>
+        <button id="btn-s" class="mobile-btn" data-btn="s">▼</button>
+        <button id="btn-jump" class="mobile-btn large" data-btn="jump">🔼</button>
+        <button id="btn-crouch" class="mobile-btn large" data-btn="crouch">🔽</button>
+        <button id="btn-break" class="mobile-btn large" data-btn="break">⛏️</button>
+        <button id="btn-place" class="mobile-btn large" data-btn="place">🧱</button>
+        <button id="btn-inventory" class="mobile-btn small" data-btn="inventory">🎒</button>
+        <button id="btn-camera" class="mobile-btn small" data-btn="camera">📷</button>
+
+        <div id="edit-hint">
+            ✋ Перетаскивай кнопки<br>
+            <small>Нажми ⚙️ снова, чтобы выйти</small>
+        </div>
 
         <div id="selected-block-info">
             Блок: <span id="selected-block">Трава</span>
@@ -103,26 +122,6 @@
         </div>
 
         <div id="craft-notification"></div>
-
-        <div id="controls" class="mobile-only">
-            <div class="controls-left">
-                <button class="ctrl-btn"
-                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')">◀</button>
-                <button class="ctrl-btn"
-                        ontouchstart="pressKey('d')" ontouchend="releaseKey('d')">▶</button>
-            </div>
-            <div class="controls-right">
-                <button class="ctrl-btn"
-                        ontouchstart="pressKey('s')" ontouchend="releaseKey('s')">▼</button>
-                <button class="ctrl-btn gas"
-                        ontouchstart="pressKey('w')" ontouchend="releaseKey('w')">▲</button>
-            </div>
-        </div>
-
-        <div id="action-buttons" class="mobile-only">
-            <button id="break-btn" onclick="breakBlockBtn()">⛏️</button>
-            <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
-        </div>
 
         <div id="hint">Y — инвентарь • Space — прыжок • Shift — присед • Esc — пауза</div>
     </div>
