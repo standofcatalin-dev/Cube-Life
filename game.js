@@ -116,8 +116,6 @@ function createWoodTexture() {
     return tex;
 }
 
-// ============ МАТЕРИАЛЫ ============
-
 function createGrassMaterial() {
     return [
         new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') }),
@@ -195,7 +193,6 @@ function removeBlock(block) {
     block.geometry.dispose();
 }
 
-// ============ МИР ============
 const WORLD_SIZE = 8;
 const grassMaterial = createGrassMaterial();
 
@@ -205,7 +202,6 @@ for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
     }
 }
 
-// ============ ПОСТРОЙКИ ============
 const stoneMaterial = createStoneMaterial();
 
 createBlock(2, 1, 2, stoneMaterial);
@@ -256,9 +252,7 @@ for (let dx = -1; dx <= 1; dx++) {
 
 createBlock(treeX, 8, treeZ, leafMaterial);
 
-// ============================================================
-// ПОДСВЕТКА
-// ============================================================
+// ============ ПОДСВЕТКА ============
 
 const highlightBox = new THREE.Mesh(
     new THREE.BoxGeometry(BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02),
@@ -272,9 +266,7 @@ const highlightBox = new THREE.Mesh(
 highlightBox.visible = false;
 scene.add(highlightBox);
 
-// ============================================================
-// ЧЕЛОВЕЧЕК
-// ============================================================
+// ============ ЧЕЛОВЕЧЕК ============
 
 function createHuman() {
     const human = new THREE.Group();
@@ -354,9 +346,7 @@ const human = createHuman();
 human.position.set(0, 0.5, 0);
 scene.add(human);
 
-// ============================================================
-// УПРАВЛЕНИЕ
-// ============================================================
+// ============ УПРАВЛЕНИЕ ============
 
 const keys = {};
 const player = { x: 0, z: 0, angle: 0, speed: 0.08, turnSpeed: 0.05 };
@@ -404,8 +394,6 @@ function toggleCamera() {
 }
 window.toggleCamera = toggleCamera;
 
-// ============ ИНВЕНТАРЬ ============
-
 function toggleInventory() {
     inventoryOpen = !inventoryOpen;
     const modal = document.getElementById('inventory-modal');
@@ -440,7 +428,6 @@ function selectSlot(index) {
 }
 window.selectSlot = selectSlot;
 
-// ============ POINTER LOCK ============
 let isPointerLocked = false;
 
 if (!isMobile) {
@@ -471,10 +458,6 @@ if (!isMobile) {
         }
     });
 }
-
-// ============================================================
-// РАЗРУШЕНИЕ / УСТАНОВКА
-// ============================================================
 
 const raycaster = new THREE.Raycaster();
 const screenCenter = new THREE.Vector2(0, 0);
@@ -532,7 +515,6 @@ if (!isMobile) {
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
-// ============ ТАЧ ============
 let lastTouchX = 0;
 let lastTouchY = 0;
 
@@ -562,7 +544,6 @@ if (isMobile) {
     }, { passive: true });
 }
 
-// ============ ОБНОВЛЕНИЕ ============
 function update() {
     if (!inventoryOpen) {
         if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
@@ -651,10 +632,6 @@ if (!isMobile) {
     mobileOnly.forEach(el => el.style.display = 'none');
 }
 
-// ============================================================
-// ИКОНКИ БЛОКОВ
-// ============================================================
-
 function makeInvIcon(color, secondaryColor) {
     const size = 64;
     const c = document.createElement('canvas');
@@ -694,89 +671,85 @@ function getIcon(index) {
 }
 
 // ============================================================
-// РИСУЕМ ЧЕЛОВЕЧКА (превью)
+// ПРЕВЬЮ ИГРОКА (рисунок человечка)
 // ============================================================
 
 function drawPlayerPreview() {
     const c = document.getElementById('player-preview');
-    if (!c) return;
+    if (!c) {
+        console.log('player-preview canvas не найден');
+        return;
+    }
 
     const ctx = c.getContext('2d');
     const W = c.width;
     const H = c.height;
 
-    // Фон — небо с облаками
+    // Небо
     const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
     skyGrad.addColorStop(0, '#87CEEB');
     skyGrad.addColorStop(1, '#B0E0F5');
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // Прозрачные облака
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    // Облако
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.beginPath();
-    ctx.arc(15, 20, 8, 0, Math.PI * 2);
-    ctx.arc(25, 22, 10, 0, Math.PI * 2);
-    ctx.arc(60, 30, 9, 0, Math.PI * 2);
-    ctx.arc(70, 32, 7, 0, Math.PI * 2);
+    ctx.arc(15, 18, 7, 0, Math.PI * 2);
+    ctx.arc(24, 20, 9, 0, Math.PI * 2);
     ctx.fill();
 
     // Земля
     ctx.fillStyle = '#5AAD3A';
-    ctx.fillRect(0, H - 20, W, 20);
+    ctx.fillRect(0, H - 22, W, 22);
     ctx.fillStyle = '#8B6535';
-    ctx.fillRect(0, H - 8, W, 8);
+    ctx.fillRect(0, H - 10, W, 10);
 
-    // Человечек (пиксельный стиль)
     const cx = W / 2;
-    const cy = H - 20;
+    const cy = H - 22;
 
     // Ноги
     ctx.fillStyle = '#333366';
-    ctx.fillRect(cx - 10, cy - 20, 8, 18);
-    ctx.fillRect(cx + 2, cy - 20, 8, 18);
+    ctx.fillRect(cx - 11, cy - 20, 9, 20);
+    ctx.fillRect(cx + 2, cy - 20, 9, 20);
 
     // Обувь
     ctx.fillStyle = '#222222';
-    ctx.fillRect(cx - 11, cy - 4, 10, 4);
-    ctx.fillRect(cx + 1, cy - 4, 10, 4);
+    ctx.fillRect(cx - 12, cy - 5, 11, 5);
+    ctx.fillRect(cx + 1, cy - 5, 11, 5);
 
-    // Тело (рубашка)
+    // Тело
     ctx.fillStyle = '#3366cc';
-    ctx.fillRect(cx - 12, cy - 48, 24, 30);
+    ctx.fillRect(cx - 12, cy - 50, 24, 30);
 
     // Руки
-    ctx.fillRect(cx - 18, cy - 46, 6, 26);
-    ctx.fillRect(cx + 12, cy - 46, 6, 26);
+    ctx.fillRect(cx - 18, cy - 48, 6, 28);
+    ctx.fillRect(cx + 12, cy - 48, 6, 28);
 
-    // Кисти рук
+    // Кисти
     ctx.fillStyle = '#ffcc99';
-    ctx.fillRect(cx - 18, cy - 20, 6, 5);
-    ctx.fillRect(cx + 12, cy - 20, 6, 5);
+    ctx.fillRect(cx - 18, cy - 22, 6, 6);
+    ctx.fillRect(cx + 12, cy - 22, 6, 6);
 
     // Голова
     ctx.fillStyle = '#ffcc99';
-    ctx.fillRect(cx - 10, cy - 68, 20, 20);
+    ctx.fillRect(cx - 10, cy - 70, 20, 20);
 
     // Глаза
     ctx.fillStyle = '#000000';
-    ctx.fillRect(cx - 6, cy - 60, 3, 3);
-    ctx.fillRect(cx + 3, cy - 60, 3, 3);
+    ctx.fillRect(cx - 6, cy - 62, 3, 3);
+    ctx.fillRect(cx + 3, cy - 62, 3, 3);
 
     // Рот
     ctx.fillStyle = '#cc6666';
-    ctx.fillRect(cx - 4, cy - 53, 8, 2);
+    ctx.fillRect(cx - 4, cy - 54, 8, 2);
 
     // Волосы
     ctx.fillStyle = '#4a2c0a';
-    ctx.fillRect(cx - 11, cy - 70, 22, 6);
-    ctx.fillRect(cx - 11, cy - 64, 3, 10);
-    ctx.fillRect(cx + 8, cy - 64, 3, 10);
+    ctx.fillRect(cx - 11, cy - 72, 22, 6);
+    ctx.fillRect(cx - 11, cy - 66, 3, 12);
+    ctx.fillRect(cx + 8, cy - 66, 3, 12);
 }
-
-// ============================================================
-// ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА
-// ============================================================
 
 function initHotbar() {
     const invBar = document.getElementById('inventory-bar');
