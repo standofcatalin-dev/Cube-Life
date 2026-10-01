@@ -22,10 +22,6 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
 sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
-// ============================================================
-// ХЕЛПЕРЫ
-// ============================================================
-
 function lightenColor(hex, percent) {
     const num = parseInt(hex.replace('#', ''), 16);
     const r = Math.min(255, (num >> 16) + percent);
@@ -145,10 +141,6 @@ function createBrickMaterial() {
 function createSandMaterial() { return new THREE.MeshLambertMaterial({ map: createTexture('#E8D5A0', 15) }); }
 function createCoalMaterial() { return new THREE.MeshLambertMaterial({ map: createTexture('#2A2A2A', 40) }); }
 
-// ============================================================
-// ВСЕ БЛОКИ
-// ============================================================
-
 const ALL_BLOCKS = [
     { id: 0, name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#4A9D2A', physics: false },
     { id: 1, name: 'Камень', material: createStoneMaterial(),  color: '#808080', secondaryColor: '#6F6F6F', physics: false },
@@ -170,10 +162,6 @@ let gameStarted = false;
 
 const ICON_CACHE = {};
 const fallingBlocks = [];
-
-// ============================================================
-// БЛОКИ В МИРЕ
-// ============================================================
 
 const BLOCK_SIZE = 1;
 const blockMap = new Map();
@@ -225,26 +213,19 @@ function startFalling(x, y, z) {
     });
 }
 
-// ============================================================
-// МИР
-// ============================================================
-
 const WORLD_SIZE = 8;
 
 function buildWorld() {
-    // Очищаем сцену
     blockMap.forEach(mesh => scene.remove(mesh));
     blockMap.clear();
     fallingBlocks.length = 0;
 
-    // Пол
     for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
         for (let z = -WORLD_SIZE / 2; z < WORLD_SIZE / 2; z++) {
             createBlock(x, 0, z, 0);
         }
     }
 
-    // Холм
     createBlock(2, 1, 2, 1);
     createBlock(3, 1, 2, 1);
     createBlock(2, 1, 3, 1);
@@ -252,7 +233,6 @@ function buildWorld() {
     createBlock(2, 2, 2, 1);
     createBlock(3, 2, 2, 1);
 
-    // Дерево
     const treeX = -3, treeZ = -3;
     createBlock(treeX, 1, treeZ, 2);
     createBlock(treeX, 2, treeZ, 2);
@@ -285,7 +265,6 @@ function buildWorld() {
     }
     createBlock(treeX, 8, treeZ, 3);
 
-    // Песок
     createBlock(-4, 1, 3, 7);
     createBlock(-4, 2, 3, 7);
     createBlock(-4, 3, 3, 7);
@@ -299,10 +278,6 @@ const highlightBox = new THREE.Mesh(
 );
 highlightBox.visible = false;
 scene.add(highlightBox);
-
-// ============================================================
-// ЧЕЛОВЕЧЕК
-// ============================================================
 
 function createHuman() {
     const human = new THREE.Group();
@@ -382,10 +357,6 @@ const human = createHuman();
 human.position.set(0, 0, 0);
 scene.add(human);
 
-// ============================================================
-// МЕНЮ — РИСУЕМ ЧЕЛОВЕЧКА
-// ============================================================
-
 function drawMenuPlayer() {
     const c = document.getElementById('menu-player-canvas');
     if (!c) return;
@@ -445,20 +416,17 @@ function drawMenuPlayer() {
 
 drawMenuPlayer();
 
-// ============================================================
-// СТАРТ ИГРЫ
-// ============================================================
-
 function startGame(mode) {
     gameStarted = true;
     pauseOpen = false;
-    document.getElementById('start-menu').classList.add('hidden');
-    document.getElementById('pause-menu').classList.remove('open');
 
-    // Пересоздаём мир (сбрасываем постройки)
+    const startEl = document.getElementById('start-menu');
+    if (startEl) startEl.classList.add('hidden');
+    const pauseEl = document.getElementById('pause-menu');
+    if (pauseEl) pauseEl.classList.remove('open');
+
     buildWorld();
 
-    // Настройка блоков
     if (mode === 'survival0') {
         blockCounts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 7: 0 };
         unlockedBlocks = [0, 1, 2, 3, 4, 7];
@@ -470,7 +438,6 @@ function startGame(mode) {
         unlockedBlocks = [0, 1, 2, 3, 4, 7];
     }
 
-    // Сбрасываем игрока
     player.x = 0;
     player.z = 0;
     player.y = 0;
@@ -485,16 +452,13 @@ function startGame(mode) {
 }
 window.startGame = startGame;
 
-// ============================================================
-// МЕНЮ ПАУЗЫ
-// ============================================================
-
 function openPause() {
     if (!gameStarted) return;
-    if (inventoryOpen) return; // не открываем паузу поверх инвентаря
+    if (inventoryOpen) return;
 
     pauseOpen = true;
-    document.getElementById('pause-menu').classList.add('open');
+    const el = document.getElementById('pause-menu');
+    if (el) el.classList.add('open');
 
     if (isPointerLocked) document.exitPointerLock();
 }
@@ -502,35 +466,34 @@ window.openPause = openPause;
 
 function closePause() {
     pauseOpen = false;
-    document.getElementById('pause-menu').classList.remove('open');
+    const el = document.getElementById('pause-menu');
+    if (el) el.classList.remove('open');
 }
 window.closePause = closePause;
 
 function exitToMenu() {
     pauseOpen = false;
     gameStarted = false;
-    document.getElementById('pause-menu').classList.remove('open');
-    document.getElementById('inventory-modal').classList.remove('open');
+
+    const pauseEl = document.getElementById('pause-menu');
+    if (pauseEl) pauseEl.classList.remove('open');
+    const invEl = document.getElementById('inventory-modal');
+    if (invEl) invEl.classList.remove('open');
     inventoryOpen = false;
 
     if (isPointerLocked) document.exitPointerLock();
 
     localStorage.removeItem('cubeLifeMode');
 
-    // Очищаем сцену блоков
     blockMap.forEach(mesh => scene.remove(mesh));
     blockMap.clear();
     fallingBlocks.length = 0;
 
-    // Показываем стартовое меню
-    document.getElementById('start-menu').classList.remove('hidden');
+    const startEl = document.getElementById('start-menu');
+    if (startEl) startEl.classList.remove('hidden');
     drawMenuPlayer();
 }
 window.exitToMenu = exitToMenu;
-
-// ============================================================
-// УПРАВЛЕНИЕ
-// ============================================================
 
 const keys = {};
 const player = { x: 0, z: 0, y: 0, vy: 0, angle: 0, speed: 0.08, turnSpeed: 0.05, isJumping: false, isCrouching: false };
@@ -547,7 +510,6 @@ document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     const normalizedKey = KEY_MAP[key] || key;
 
-    // === ESC — пауза ===
     if (key === 'escape') {
         if (inventoryOpen) {
             toggleInventory();
@@ -665,7 +627,12 @@ if (!isMobile) {
     });
 
     document.addEventListener('pointerlockchange', () => {
+        const wasLocked = isPointerLocked;
         isPointerLocked = document.pointerLockElement === canvas;
+
+        if (wasLocked && !isPointerLocked && gameStarted && !inventoryOpen && !pauseOpen) {
+            openPause();
+        }
     });
 
     document.addEventListener('mousemove', (e) => {
@@ -684,10 +651,6 @@ if (!isMobile) {
         }
     });
 }
-
-// ============================================================
-// РАЗРУШЕНИЕ / УСТАНОВКА
-// ============================================================
 
 const raycaster = new THREE.Raycaster();
 const screenCenter = new THREE.Vector2(0, 0);
@@ -719,9 +682,7 @@ function breakBlock() {
     if (blockCounts[blockId] === undefined) blockCounts[blockId] = 0;
     blockCounts[blockId]++;
 
-    if (!unlockedBlocks.includes(blockId)) {
-        unlockedBlocks.push(blockId);
-    }
+    if (!unlockedBlocks.includes(blockId)) unlockedBlocks.push(blockId);
 
     initHotbar();
 
@@ -758,9 +719,7 @@ function placeBlock() {
 
     createBlock(newPos.x, newPos.y, newPos.z, blockId);
 
-    if (blockCounts[blockId] !== undefined) {
-        blockCounts[blockId]--;
-    }
+    if (blockCounts[blockId] !== undefined) blockCounts[blockId]--;
 
     initHotbar();
 
@@ -807,10 +766,6 @@ if (isMobile) {
     }, { passive: true });
 }
 
-// ============================================================
-// ОБНОВЛЕНИЕ
-// ============================================================
-
 function update() {
     if (!inventoryOpen && !pauseOpen && gameStarted) {
         if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
@@ -843,7 +798,6 @@ function update() {
     human.position.y = player.y + 0.5 + crouchOffset;
     human.rotation.y = player.angle;
 
-    // Камера
     if (cameraMode === 3) {
         if (keys['left']) cameraFollowAngle += 0.03;
         if (keys['right']) cameraFollowAngle -= 0.03;
@@ -875,7 +829,6 @@ function update() {
         human.visible = false;
     }
 
-    // Физика падающих блоков
     for (let i = fallingBlocks.length - 1; i >= 0; i--) {
         const fb = fallingBlocks[i];
         fb.vy += GRAVITY * 0.5;
@@ -941,10 +894,6 @@ if (!isMobile) {
     mobileOnly.forEach(el => el.style.display = 'none');
 }
 
-// ============================================================
-// ИКОНКИ
-// ============================================================
-
 function makeInvIcon(color, secondaryColor) {
     const size = 64;
     const c = document.createElement('canvas');
@@ -981,10 +930,6 @@ function getIcon(blockId) {
     ICON_CACHE[blockId] = makeInvIcon(block.color, block.secondaryColor);
     return ICON_CACHE[blockId];
 }
-
-// ============================================================
-// ПРЕВЬЮ
-// ============================================================
 
 function drawPlayerPreview() {
     const c = document.getElementById('player-preview');
@@ -1041,10 +986,6 @@ function drawPlayerPreview() {
     ctx.fillRect(cx - 11, cy - 66, 3, 12);
     ctx.fillRect(cx + 8, cy - 66, 3, 12);
 }
-
-// ============================================================
-// КРАФТ
-// ============================================================
 
 const RECIPES = [
     { inputs: { 2: 1 }, output: 5, name: 'Доски' },
@@ -1210,10 +1151,6 @@ function showNotification(text) {
     setTimeout(() => notif.classList.remove('show'), 2000);
 }
 
-// ============================================================
-// ИНИЦИАЛИЗАЦИЯ
-// ============================================================
-
 function initHotbar() {
     const invBar = document.getElementById('inventory-bar');
     if (!invBar) return;
@@ -1311,17 +1248,16 @@ if (craftBtn) craftBtn.onclick = craftItem;
 const resetBtn = document.getElementById('craft-reset-btn');
 if (resetBtn) resetBtn.onclick = resetCrafting;
 
-// Обработчики меню паузы
 const pauseResumeBtn = document.getElementById('pause-resume-btn');
 if (pauseResumeBtn) pauseResumeBtn.onclick = closePause;
 
 const pauseExitBtn = document.getElementById('pause-exit-btn');
 if (pauseExitBtn) pauseExitBtn.onclick = exitToMenu;
 
-// Проверяем сохранённый режим
 const savedMode = localStorage.getItem('cubeLifeMode');
 if (savedMode) {
     startGame(savedMode);
 } else {
-    document.getElementById('start-menu').classList.remove('hidden');
+    const startEl = document.getElementById('start-menu');
+    if (startEl) startEl.classList.remove('hidden');
 }
