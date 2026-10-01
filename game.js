@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 14: Выживание + Счётчики + Меню
+// CUBE LIFE — Этап 15: Меню паузы (ESC)
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -162,18 +162,14 @@ const ALL_BLOCKS = [
 ];
 
 let unlockedBlocks = [0, 1, 2, 3, 4, 7];
-let blockCounts = {}; // { blockId: count }
+let blockCounts = {};
 let selectedSlot = 0;
 let inventoryOpen = false;
+let pauseOpen = false;
 let gameStarted = false;
 
 const ICON_CACHE = {};
-
-// ============================================================
-// ФИЗИКА ПАДАЮЩИХ БЛОКОВ
-// ============================================================
-
-const fallingBlocks = []; // { mesh, blockId, x, y, z, vy }
+const fallingBlocks = [];
 
 // ============================================================
 // БЛОКИ В МИРЕ
@@ -205,11 +201,9 @@ function removeBlock(mesh) {
     mesh.geometry.dispose();
 }
 
-// Проверка блока под песком
 function checkPhysics(x, y, z) {
     const under = blockMap.get(blockKey(x, y - 1, z));
     if (!under && y > 0) {
-        // Блок падает
         startFalling(x, y, z);
     }
 }
@@ -237,58 +231,67 @@ function startFalling(x, y, z) {
 
 const WORLD_SIZE = 8;
 
-for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
-    for (let z = -WORLD_SIZE / 2; z < WORLD_SIZE / 2; z++) {
-        createBlock(x, 0, z, 0); // Трава
+function buildWorld() {
+    // Очищаем сцену
+    blockMap.forEach(mesh => scene.remove(mesh));
+    blockMap.clear();
+    fallingBlocks.length = 0;
+
+    // Пол
+    for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
+        for (let z = -WORLD_SIZE / 2; z < WORLD_SIZE / 2; z++) {
+            createBlock(x, 0, z, 0);
+        }
     }
+
+    // Холм
+    createBlock(2, 1, 2, 1);
+    createBlock(3, 1, 2, 1);
+    createBlock(2, 1, 3, 1);
+    createBlock(3, 1, 3, 1);
+    createBlock(2, 2, 2, 1);
+    createBlock(3, 2, 2, 1);
+
+    // Дерево
+    const treeX = -3, treeZ = -3;
+    createBlock(treeX, 1, treeZ, 2);
+    createBlock(treeX, 2, treeZ, 2);
+    createBlock(treeX, 3, treeZ, 2);
+    createBlock(treeX, 4, treeZ, 2);
+    createBlock(treeX, 5, treeZ, 2);
+
+    createBlock(treeX - 2, 5, treeZ, 3);
+    createBlock(treeX + 2, 5, treeZ, 3);
+    createBlock(treeX, 5, treeZ - 2, 3);
+    createBlock(treeX, 5, treeZ + 2, 3);
+    createBlock(treeX - 1, 5, treeZ - 2, 3);
+    createBlock(treeX + 1, 5, treeZ - 2, 3);
+    createBlock(treeX - 1, 5, treeZ + 2, 3);
+    createBlock(treeX + 1, 5, treeZ + 2, 3);
+    createBlock(treeX - 2, 5, treeZ - 1, 3);
+    createBlock(treeX + 2, 5, treeZ - 1, 3);
+    createBlock(treeX - 2, 5, treeZ + 1, 3);
+    createBlock(treeX + 2, 5, treeZ + 1, 3);
+
+    for (let dx = -2; dx <= 2; dx++) {
+        for (let dz = -2; dz <= 2; dz++) {
+            createBlock(treeX + dx, 6, treeZ + dz, 3);
+        }
+    }
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+            createBlock(treeX + dx, 7, treeZ + dz, 3);
+        }
+    }
+    createBlock(treeX, 8, treeZ, 3);
+
+    // Песок
+    createBlock(-4, 1, 3, 7);
+    createBlock(-4, 2, 3, 7);
+    createBlock(-4, 3, 3, 7);
 }
 
-// Холм
-createBlock(2, 1, 2, 1);
-createBlock(3, 1, 2, 1);
-createBlock(2, 1, 3, 1);
-createBlock(3, 1, 3, 1);
-createBlock(2, 2, 2, 1);
-createBlock(3, 2, 2, 1);
-
-// Дерево
-const treeX = -3, treeZ = -3;
-
-createBlock(treeX, 1, treeZ, 2);
-createBlock(treeX, 2, treeZ, 2);
-createBlock(treeX, 3, treeZ, 2);
-createBlock(treeX, 4, treeZ, 2);
-createBlock(treeX, 5, treeZ, 2);
-
-createBlock(treeX - 2, 5, treeZ, 3);
-createBlock(treeX + 2, 5, treeZ, 3);
-createBlock(treeX, 5, treeZ - 2, 3);
-createBlock(treeX, 5, treeZ + 2, 3);
-createBlock(treeX - 1, 5, treeZ - 2, 3);
-createBlock(treeX + 1, 5, treeZ - 2, 3);
-createBlock(treeX - 1, 5, treeZ + 2, 3);
-createBlock(treeX + 1, 5, treeZ + 2, 3);
-createBlock(treeX - 2, 5, treeZ - 1, 3);
-createBlock(treeX + 2, 5, treeZ - 1, 3);
-createBlock(treeX - 2, 5, treeZ + 1, 3);
-createBlock(treeX + 2, 5, treeZ + 1, 3);
-
-for (let dx = -2; dx <= 2; dx++) {
-    for (let dz = -2; dz <= 2; dz++) {
-        createBlock(treeX + dx, 6, treeZ + dz, 3);
-    }
-}
-for (let dx = -1; dx <= 1; dx++) {
-    for (let dz = -1; dz <= 1; dz++) {
-        createBlock(treeX + dx, 7, treeZ + dz, 3);
-    }
-}
-createBlock(treeX, 8, treeZ, 3);
-
-// Немного песка
-createBlock(-4, 1, 3, 7);
-createBlock(-4, 2, 3, 7);
-createBlock(-4, 3, 3, 7);
+buildWorld();
 
 const highlightBox = new THREE.Mesh(
     new THREE.BoxGeometry(BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02),
@@ -407,8 +410,7 @@ function drawMenuPlayer() {
     ctx.fillStyle = '#8B6535';
     ctx.fillRect(0, H - 20, W, 20);
 
-    const cx = W / 2;
-    const cy = H - 40;
+    const cx = W / 2, cy = H - 40;
 
     ctx.fillStyle = '#333366';
     ctx.fillRect(cx - 22, cy - 40, 18, 40);
@@ -449,20 +451,31 @@ drawMenuPlayer();
 
 function startGame(mode) {
     gameStarted = true;
+    pauseOpen = false;
     document.getElementById('start-menu').classList.add('hidden');
+    document.getElementById('pause-menu').classList.remove('open');
 
-    // Настройка блоков в зависимости от режима
+    // Пересоздаём мир (сбрасываем постройки)
+    buildWorld();
+
+    // Настройка блоков
     if (mode === 'survival0') {
-        // Всё по 0
         blockCounts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 7: 0 };
+        unlockedBlocks = [0, 1, 2, 3, 4, 7];
     } else if (mode === 'creative') {
-        // Всё по 999
         blockCounts = { 0: 999, 1: 999, 2: 999, 3: 999, 4: 999, 5: 999, 6: 999, 7: 999, 8: 999 };
         unlockedBlocks = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     } else {
-        // survival64 — базовые по 64
         blockCounts = { 0: 64, 1: 64, 2: 64, 3: 64, 4: 64, 7: 64 };
+        unlockedBlocks = [0, 1, 2, 3, 4, 7];
     }
+
+    // Сбрасываем игрока
+    player.x = 0;
+    player.z = 0;
+    player.y = 0;
+    player.vy = 0;
+    player.angle = 0;
 
     localStorage.setItem('cubeLifeMode', mode);
 
@@ -471,6 +484,49 @@ function startGame(mode) {
     selectSlot(0);
 }
 window.startGame = startGame;
+
+// ============================================================
+// МЕНЮ ПАУЗЫ
+// ============================================================
+
+function openPause() {
+    if (!gameStarted) return;
+    if (inventoryOpen) return; // не открываем паузу поверх инвентаря
+
+    pauseOpen = true;
+    document.getElementById('pause-menu').classList.add('open');
+
+    if (isPointerLocked) document.exitPointerLock();
+}
+window.openPause = openPause;
+
+function closePause() {
+    pauseOpen = false;
+    document.getElementById('pause-menu').classList.remove('open');
+}
+window.closePause = closePause;
+
+function exitToMenu() {
+    pauseOpen = false;
+    gameStarted = false;
+    document.getElementById('pause-menu').classList.remove('open');
+    document.getElementById('inventory-modal').classList.remove('open');
+    inventoryOpen = false;
+
+    if (isPointerLocked) document.exitPointerLock();
+
+    localStorage.removeItem('cubeLifeMode');
+
+    // Очищаем сцену блоков
+    blockMap.forEach(mesh => scene.remove(mesh));
+    blockMap.clear();
+    fallingBlocks.length = 0;
+
+    // Показываем стартовое меню
+    document.getElementById('start-menu').classList.remove('hidden');
+    drawMenuPlayer();
+}
+window.exitToMenu = exitToMenu;
 
 // ============================================================
 // УПРАВЛЕНИЕ
@@ -488,16 +544,33 @@ let cameraPitchAngle = 0;
 const KEY_MAP = { 'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v', 'н': 'y' };
 
 document.addEventListener('keydown', (e) => {
-    if (!gameStarted) return;
     const key = e.key.toLowerCase();
     const normalizedKey = KEY_MAP[key] || key;
+
+    // === ESC — пауза ===
+    if (key === 'escape') {
+        if (inventoryOpen) {
+            toggleInventory();
+            return;
+        }
+        if (pauseOpen) {
+            closePause();
+            return;
+        }
+        if (gameStarted) {
+            openPause();
+            return;
+        }
+    }
+
+    if (!gameStarted) return;
+
     keys[normalizedKey] = true;
 
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(key)) e.preventDefault();
     if (normalizedKey === 'v') toggleCamera();
     if (normalizedKey === 'y') toggleInventory();
     if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) selectSlot(parseInt(key) - 1);
-    if (key === 'escape' && inventoryOpen) toggleInventory();
     if (key === ' ' || normalizedKey === 'space') jump();
 });
 
@@ -508,14 +581,14 @@ document.addEventListener('keyup', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Shift') player.isCrouching = true;
+    if (e.key === 'Shift' && gameStarted) player.isCrouching = true;
 });
 document.addEventListener('keyup', (e) => {
     if (e.key === 'Shift') player.isCrouching = false;
 });
 
 document.addEventListener('wheel', (e) => {
-    if (isPointerLocked && !inventoryOpen && gameStarted) {
+    if (isPointerLocked && !inventoryOpen && !pauseOpen && gameStarted) {
         if (e.deltaY > 0) selectSlot((selectedSlot + 1) % unlockedBlocks.length);
         else selectSlot((selectedSlot - 1 + unlockedBlocks.length) % unlockedBlocks.length);
     }
@@ -534,6 +607,8 @@ function toggleCamera() {
 window.toggleCamera = toggleCamera;
 
 function toggleInventory() {
+    if (pauseOpen) return;
+
     inventoryOpen = !inventoryOpen;
     const modal = document.getElementById('inventory-modal');
     if (!modal) return;
@@ -568,7 +643,7 @@ function selectSlot(slotIndex) {
 window.selectSlot = selectSlot;
 
 function jump() {
-    if (inventoryOpen) return;
+    if (inventoryOpen || pauseOpen) return;
     if (player.isJumping) return;
     player.vy = JUMP_FORCE;
     player.isJumping = true;
@@ -584,7 +659,7 @@ let isPointerLocked = false;
 
 if (!isMobile) {
     canvas.addEventListener('click', () => {
-        if (!isPointerLocked && !inventoryOpen && gameStarted) {
+        if (!isPointerLocked && !inventoryOpen && !pauseOpen && gameStarted) {
             canvas.requestPointerLock().catch(err => console.log(err));
         }
     });
@@ -625,7 +700,7 @@ function getTargetBlock() {
 }
 
 function breakBlock() {
-    if (inventoryOpen || !gameStarted) return;
+    if (inventoryOpen || pauseOpen || !gameStarted) return;
     const hit = getTargetBlock();
     if (!hit) return;
     const mesh = hit.object;
@@ -635,26 +710,21 @@ function breakBlock() {
     const dz = Math.abs(mesh.position.z - player.z);
     if (dx < 0.6 && dz < 0.6 && mesh.position.y < 1) return;
 
-    // Удаляем
     const x = Math.round(mesh.position.x);
     const y = Math.round(mesh.position.y);
     const z = Math.round(mesh.position.z);
 
     removeBlock(mesh);
 
-    // +1 в инвентарь
     if (blockCounts[blockId] === undefined) blockCounts[blockId] = 0;
     blockCounts[blockId]++;
 
-    // Разблокируем блок если новый
     if (!unlockedBlocks.includes(blockId)) {
         unlockedBlocks.push(blockId);
     }
 
-    // Обновляем hotbar
     initHotbar();
 
-    // Проверяем физику блоков вокруг
     checkPhysics(x + 1, y, z);
     checkPhysics(x - 1, y, z);
     checkPhysics(x, y, z + 1);
@@ -663,13 +733,12 @@ function breakBlock() {
 }
 
 function placeBlock() {
-    if (inventoryOpen || !gameStarted) return;
+    if (inventoryOpen || pauseOpen || !gameStarted) return;
     const hit = getTargetBlock();
     if (!hit) return;
 
     const blockId = unlockedBlocks[selectedSlot];
 
-    // Проверка количества
     if (blockCounts[blockId] !== undefined && blockCounts[blockId] <= 0) {
         showNotification('❌ Нет блоков ' + ALL_BLOCKS[blockId].name);
         return;
@@ -689,15 +758,12 @@ function placeBlock() {
 
     createBlock(newPos.x, newPos.y, newPos.z, blockId);
 
-    // -1 из инвентаря
     if (blockCounts[blockId] !== undefined) {
         blockCounts[blockId]--;
     }
 
     initHotbar();
 
-    // Если поставили на песок сверху — ничего
-    // Если под новым блоком пусто — проверяем
     checkPhysics(Math.round(newPos.x), Math.round(newPos.y), Math.round(newPos.z));
 }
 
@@ -706,7 +772,7 @@ window.placeBlockBtn = placeBlock;
 
 if (!isMobile) {
     document.addEventListener('mousedown', (e) => {
-        if (inventoryOpen || !gameStarted) return;
+        if (inventoryOpen || pauseOpen || !gameStarted) return;
         if (e.button === 0) placeBlock();
         else if (e.button === 2) breakBlock();
     });
@@ -746,7 +812,7 @@ if (isMobile) {
 // ============================================================
 
 function update() {
-    if (!inventoryOpen && gameStarted) {
+    if (!inventoryOpen && !pauseOpen && gameStarted) {
         if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
         if (keys['d'] || keys['arrowright']) player.angle -= player.turnSpeed;
 
@@ -762,7 +828,6 @@ function update() {
         }
     }
 
-    // Физика игрока
     player.vy += GRAVITY;
     player.y += player.vy;
     if (player.y <= 0) { player.y = 0; player.vy = 0; player.isJumping = false; }
@@ -820,7 +885,6 @@ function update() {
         const y = Math.round(fb.mesh.position.y);
         const z = Math.round(fb.mesh.position.z);
 
-        // Проверяем, есть ли блок под ним
         const under = blockMap.get(blockKey(x, y - 1, z));
         const atLevel = blockMap.get(blockKey(x, y, z));
 
@@ -832,7 +896,6 @@ function update() {
             blockMap.set(blockKey(fb.mesh.position.x, fb.mesh.position.y, fb.mesh.position.z), fb.mesh);
             fallingBlocks.splice(i, 1);
 
-            // Проверяем блок ВЫШЕ (может он тоже упадёт)
             const above = blockMap.get(blockKey(x, y + 1, z));
             if (above) {
                 const aboveId = above.userData.blockId;
@@ -843,8 +906,7 @@ function update() {
         }
     }
 
-    // Подсветка
-    if (!inventoryOpen && gameStarted) {
+    if (!inventoryOpen && !pauseOpen && gameStarted) {
         const hit = getTargetBlock();
         if (hit) {
             highlightBox.position.copy(hit.object.position);
@@ -1103,7 +1165,6 @@ function craftItem() {
 
     if (!matched) return;
 
-    // Проверяем наличие ингредиентов
     for (const k of Object.keys(matched.inputs)) {
         const blockId = Number(k);
         const needed = matched.inputs[blockId];
@@ -1113,13 +1174,11 @@ function craftItem() {
         }
     }
 
-    // Списываем ингредиенты
     for (const k of Object.keys(matched.inputs)) {
         const blockId = Number(k);
         blockCounts[blockId] -= matched.inputs[blockId];
     }
 
-    // Добавляем результат
     if (blockCounts[matched.output] === undefined) blockCounts[matched.output] = 0;
     blockCounts[matched.output]++;
 
@@ -1252,12 +1311,17 @@ if (craftBtn) craftBtn.onclick = craftItem;
 const resetBtn = document.getElementById('craft-reset-btn');
 if (resetBtn) resetBtn.onclick = resetCrafting;
 
+// Обработчики меню паузы
+const pauseResumeBtn = document.getElementById('pause-resume-btn');
+if (pauseResumeBtn) pauseResumeBtn.onclick = closePause;
+
+const pauseExitBtn = document.getElementById('pause-exit-btn');
+if (pauseExitBtn) pauseExitBtn.onclick = exitToMenu;
+
 // Проверяем сохранённый режим
 const savedMode = localStorage.getItem('cubeLifeMode');
 if (savedMode) {
-    // Автоматически стартуем, если режим сохранён
     startGame(savedMode);
 } else {
-    // Показываем меню
     document.getElementById('start-menu').classList.remove('hidden');
 }
