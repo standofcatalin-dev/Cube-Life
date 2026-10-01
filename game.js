@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 5: Инвентарь как в Minecraft (hotbar)
+// CUBE LIFE — Этап 6: Инвентарь по клавише Y
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -70,7 +70,6 @@ function createTexture(baseColor, noiseAmount = 30, size = 64) {
     return tex;
 }
 
-// Специальная текстура для дерева (с вертикальными полосками)
 function createWoodTexture() {
     const size = 64;
     const c = document.createElement('canvas');
@@ -81,14 +80,12 @@ function createWoodTexture() {
     ctx.fillStyle = '#6B4423';
     ctx.fillRect(0, 0, size, size);
 
-    // Вертикальные полосы
     for (let i = 0; i < 12; i++) {
         const x = Math.random() * size;
         ctx.fillStyle = Math.random() > 0.5 ? '#5A3A1F' : '#8B6535';
         ctx.fillRect(x, 0, 1 + Math.random() * 2, size);
     }
 
-    // Шум
     const imageData = ctx.getImageData(0, 0, size, size);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
@@ -111,7 +108,6 @@ function createGrassMaterial() {
     const topMat = new THREE.MeshLambertMaterial({ map: createTexture('#5AAD3A') });
     const sideMat = new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') });
     const bottomMat = new THREE.MeshLambertMaterial({ map: createTexture('#6B4513') });
-
     return [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat];
 }
 
@@ -122,7 +118,6 @@ function createStoneMaterial() {
 function createWoodMaterial() {
     const sideMat = new THREE.MeshLambertMaterial({ map: createWoodTexture() });
     const topMat = new THREE.MeshLambertMaterial({ map: createTexture('#A0703A') });
-
     return [sideMat, sideMat, topMat, topMat, sideMat, sideMat];
 }
 
@@ -135,43 +130,19 @@ function createDirtMaterial() {
 }
 
 // ============================================================
-// ИНВЕНТАРЬ — с функциями для получения цвета/иконки
+// ИНВЕНТАРЬ
 // ============================================================
 
 const INVENTORY = [
-    {
-        name: 'Трава',
-        material: createGrassMaterial(),
-        color: '#5AAD3A',
-        secondaryColor: '#8B6535'
-    },
-    {
-        name: 'Камень',
-        material: createStoneMaterial(),
-        color: '#808080',
-        secondaryColor: '#6F6F6F'
-    },
-    {
-        name: 'Дерево',
-        material: createWoodMaterial(),
-        color: '#6B4423',
-        secondaryColor: '#8B6535'
-    },
-    {
-        name: 'Листва',
-        material: createLeafMaterial(),
-        color: '#2D5A1E',
-        secondaryColor: '#3D6A2E'
-    },
-    {
-        name: 'Земля',
-        material: createDirtMaterial(),
-        color: '#5A3A1A',
-        secondaryColor: '#7A4E30'
-    }
+    { name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#8B6535' },
+    { name: 'Камень', material: createStoneMaterial(),  color: '#808080', secondaryColor: '#6F6F6F' },
+    { name: 'Дерево', material: createWoodMaterial(),   color: '#6B4423', secondaryColor: '#8B6535' },
+    { name: 'Листва', material: createLeafMaterial(),   color: '#2D5A1E', secondaryColor: '#3D6A2E' },
+    { name: 'Земля',  material: createDirtMaterial(),   color: '#5A3A1A', secondaryColor: '#7A4E30' }
 ];
 
 let selectedSlot = 0;
+let inventoryOpen = false;
 
 // ============ БЛОКИ ============
 
@@ -199,7 +170,7 @@ function removeBlock(block) {
     block.geometry.dispose();
 }
 
-// ============ МИР 8×8 ============
+// ============ МИР ============
 const WORLD_SIZE = 8;
 const grassMaterial = createGrassMaterial();
 
@@ -222,9 +193,6 @@ createBlock(3, 2, 2, stoneMaterial);
 const woodMaterial = createWoodMaterial();
 const leafMaterial = createLeafMaterial();
 
-// ============================================================
-// ДЕРЕВО
-// ============================================================
 const treeX = -3;
 const treeZ = -3;
 
@@ -264,7 +232,7 @@ for (let dx = -1; dx <= 1; dx++) {
 createBlock(treeX, 8, treeZ, leafMaterial);
 
 // ============================================================
-// ПОДСВЕТКА БЛОКА
+// ПОДСВЕТКА
 // ============================================================
 
 const highlightGeometry = new THREE.BoxGeometry(
@@ -386,7 +354,7 @@ let cameraFollowAngle = 0;
 let cameraPitchAngle = 0;
 
 const KEY_MAP = {
-    'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v'
+    'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v', 'н': 'y'
 };
 
 document.addEventListener('keydown', (e) => {
@@ -400,9 +368,17 @@ document.addEventListener('keydown', (e) => {
     if (normalizedKey === 'v') {
         toggleCamera();
     }
-    // Цифры 1-5 для выбора слота
-    if (['1', '2', '3', '4', '5'].includes(key)) {
+    // Y — открыть/закрыть инвентарь
+    if (normalizedKey === 'y') {
+        toggleInventory();
+    }
+    // 1-9 — выбор слота
+    if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) {
         selectSlot(parseInt(key) - 1);
+    }
+    // Esc — закрыть инвентарь
+    if (key === 'escape' && inventoryOpen) {
+        toggleInventory();
     }
 });
 
@@ -413,7 +389,7 @@ document.addEventListener('keyup', (e) => {
 });
 
 document.addEventListener('wheel', (e) => {
-    if (isPointerLocked) {
+    if (isPointerLocked && !inventoryOpen) {
         if (e.deltaY > 0) {
             selectSlot((selectedSlot + 1) % INVENTORY.length);
         } else {
@@ -440,19 +416,54 @@ function toggleCamera() {
 }
 window.toggleCamera = toggleCamera;
 
+// ============ ИНВЕНТАРЬ (большое окно) ============
+
+function toggleInventory() {
+    inventoryOpen = !inventoryOpen;
+    const modal = document.getElementById('inventory-modal');
+    if (!modal) return;
+
+    if (inventoryOpen) {
+        modal.classList.add('open');
+        // Освобождаем мышь, если захвачена
+        if (isPointerLocked) {
+            document.exitPointerLock();
+        }
+    } else {
+        modal.classList.remove('open');
+    }
+}
+window.toggleInventory = toggleInventory;
+
 // ============ ВЫБОР БЛОКА ============
 
 function selectSlot(index) {
     if (index < 0 || index >= INVENTORY.length) return;
     selectedSlot = index;
 
-    document.querySelectorAll('.inv-slot').forEach((el, i) => {
+    // Обновляем hotbar
+    document.querySelectorAll('.inv-slot[data-hotbar]').forEach((el, i) => {
         if (i === index) {
             el.classList.add('active');
         } else {
             el.classList.remove('active');
         }
     });
+
+    // Обновляем большой инвентарь
+    document.querySelectorAll('.inv-modal-slot').forEach((el, i) => {
+        if (i === index) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    });
+
+    // Обновляем текст "Блок: ..."
+    const selectedEl = document.getElementById('selected-block');
+    if (selectedEl) {
+        selectedEl.textContent = INVENTORY[index].name;
+    }
 }
 window.selectSlot = selectSlot;
 
@@ -461,7 +472,7 @@ let isPointerLocked = false;
 
 if (!isMobile) {
     canvas.addEventListener('click', () => {
-        if (!isPointerLocked) {
+        if (!isPointerLocked && !inventoryOpen) {
             canvas.requestPointerLock().catch(err => {
                 console.log('Pointer lock error:', err);
             });
@@ -506,6 +517,7 @@ function getTargetBlock() {
 }
 
 function breakBlock() {
+    if (inventoryOpen) return;
     const hit = getTargetBlock();
     if (!hit) return;
     const block = hit.object;
@@ -518,6 +530,7 @@ function breakBlock() {
 }
 
 function placeBlock() {
+    if (inventoryOpen) return;
     const hit = getTargetBlock();
     if (!hit) return;
 
@@ -543,6 +556,7 @@ window.placeBlockBtn = placeBlock;
 // ============ МЫШЬ (ПК) ============
 if (!isMobile) {
     document.addEventListener('mousedown', (e) => {
+        if (inventoryOpen) return;
         if (e.button === 0) {
             placeBlock();
         } else if (e.button === 2) {
@@ -585,20 +599,22 @@ if (isMobile) {
 
 // ============ ОБНОВЛЕНИЕ ============
 function update() {
-    if (keys['a'] || keys['arrowleft']) {
-        player.angle += player.turnSpeed;
-    }
-    if (keys['d'] || keys['arrowright']) {
-        player.angle -= player.turnSpeed;
-    }
+    if (!inventoryOpen) {
+        if (keys['a'] || keys['arrowleft']) {
+            player.angle += player.turnSpeed;
+        }
+        if (keys['d'] || keys['arrowright']) {
+            player.angle -= player.turnSpeed;
+        }
 
-    if (keys['w'] || keys['arrowup']) {
-        player.x += Math.sin(player.angle) * player.speed;
-        player.z += Math.cos(player.angle) * player.speed;
-    }
-    if (keys['s'] || keys['arrowdown']) {
-        player.x -= Math.sin(player.angle) * player.speed;
-        player.z -= Math.cos(player.angle) * player.speed;
+        if (keys['w'] || keys['arrowup']) {
+            player.x += Math.sin(player.angle) * player.speed;
+            player.z += Math.cos(player.angle) * player.speed;
+        }
+        if (keys['s'] || keys['arrowdown']) {
+            player.x -= Math.sin(player.angle) * player.speed;
+            player.z -= Math.cos(player.angle) * player.speed;
+        }
     }
 
     const limit = WORLD_SIZE / 2 - 0.5;
@@ -643,10 +659,14 @@ function update() {
     }
 
     // ============ ПОДСВЕТКА ============
-    const hit = getTargetBlock();
-    if (hit) {
-        highlightBox.position.copy(hit.object.position);
-        highlightBox.visible = true;
+    if (!inventoryOpen) {
+        const hit = getTargetBlock();
+        if (hit) {
+            highlightBox.position.copy(hit.object.position);
+            highlightBox.visible = true;
+        } else {
+            highlightBox.visible = false;
+        }
     } else {
         highlightBox.visible = false;
     }
@@ -681,22 +701,19 @@ if (!isMobile) {
 }
 
 // ============================================================
-// ИНИЦИАЛИЗАЦИЯ HOTBAR (с canvas-иконками)
+// ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА
 // ============================================================
 
 function makeInvIcon(color, secondaryColor) {
-    // Рисуем иконку блока — маленький кубик с текстурой
     const size = 32;
     const c = document.createElement('canvas');
     c.width = size;
     c.height = size;
     const ctx = c.getContext('2d');
 
-    // Основной цвет
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, size, size);
 
-    // Пятна (текстура)
     for (let i = 0; i < 40; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -706,7 +723,6 @@ function makeInvIcon(color, secondaryColor) {
         ctx.fillRect(x, y, w, h);
     }
 
-    // Рамка (для эффекта кубика)
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.lineWidth = 2;
     ctx.strokeRect(1, 1, size - 2, size - 2);
@@ -714,6 +730,7 @@ function makeInvIcon(color, secondaryColor) {
     return c.toDataURL();
 }
 
+// Hotbar
 function initHotbar() {
     const invBar = document.getElementById('inventory-bar');
     if (!invBar) return;
@@ -723,29 +740,71 @@ function initHotbar() {
     INVENTORY.forEach((item, index) => {
         const slot = document.createElement('div');
         slot.className = 'inv-slot';
+        slot.setAttribute('data-hotbar', 'true');
         if (index === selectedSlot) slot.classList.add('active');
 
-        // Иконка-картинка
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
         img.src = makeInvIcon(item.color, item.secondaryColor);
         img.alt = item.name;
         slot.appendChild(img);
 
-        // Номер слота
         const num = document.createElement('span');
         num.className = 'inv-num';
         num.textContent = (index + 1);
         slot.appendChild(num);
 
-        // Название блока (всплывает при наведении)
         slot.title = item.name;
-
         slot.onclick = () => selectSlot(index);
 
         invBar.appendChild(slot);
     });
 }
 
+// Большой инвентарь (модальное окно)
+function initInventoryModal() {
+    const modal = document.getElementById('inventory-modal-grid');
+    if (!modal) return;
+
+    modal.innerHTML = '';
+
+    INVENTORY.forEach((item, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'inv-modal-slot';
+        if (index === selectedSlot) slot.classList.add('active');
+
+        const img = document.createElement('img');
+        img.className = 'inv-icon-img';
+        img.src = makeInvIcon(item.color, item.secondaryColor);
+        img.alt = item.name;
+        slot.appendChild(img);
+
+        const name = document.createElement('div');
+        name.className = 'inv-modal-name';
+        name.textContent = item.name;
+        slot.appendChild(name);
+
+        const num = document.createElement('span');
+        num.className = 'inv-num';
+        num.textContent = (index + 1);
+        slot.appendChild(num);
+
+        slot.onclick = () => selectSlot(index);
+
+        modal.appendChild(slot);
+    });
+}
+
+// Инициализация
 initHotbar();
+initInventoryModal();
+
+// Делаем кнопку Y для мобильных — добавляем на панель
+const yBtn = document.createElement('button');
+yBtn.id = 'inventory-toggle-btn';
+yBtn.innerHTML = '🎒';
+yBtn.onclick = toggleInventory;
+document.body.appendChild(yBtn);
+
+// Первый выбор
 selectSlot(0);
