@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 4.1: Реалистичные текстуры (как в Minecraft)
+// CUBE LIFE — Этап 4.2: Дерево как в Minecraft
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -42,7 +42,7 @@ sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
 // ============================================================
-// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ — создание canvas-текстуры
+// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ
 // ============================================================
 
 function makeCanvas(size = 128) {
@@ -60,7 +60,7 @@ function textureFromCanvas(c) {
 }
 
 // ============================================================
-// ТЕКСТУРЫ БЛОКОВ (как в Minecraft)
+// ТЕКСТУРЫ БЛОКОВ
 // ============================================================
 
 // ---------- ТРАВА (верх) ----------
@@ -69,11 +69,9 @@ function makeGrassTopTexture() {
     const c = makeCanvas(size);
     const ctx = c.getContext('2d');
 
-    // Базовый зелёный
     ctx.fillStyle = '#5AAD3A';
     ctx.fillRect(0, 0, size, size);
 
-    // Травинки (мелкие вертикальные линии)
     for (let i = 0; i < 350; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -85,7 +83,6 @@ function makeGrassTopTexture() {
         ctx.fillRect(x, y, w, h);
     }
 
-    // Тёмные точки
     for (let i = 0; i < 50; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -96,17 +93,15 @@ function makeGrassTopTexture() {
     return c;
 }
 
-// ---------- ЗЕМЛЯ (низ травы и блок "земля") ----------
+// ---------- ЗЕМЛЯ ----------
 function makeDirtTexture() {
     const size = 128;
     const c = makeCanvas(size);
     const ctx = c.getContext('2d');
 
-    // Базовый коричневый
     ctx.fillStyle = '#8B5A3C';
     ctx.fillRect(0, 0, size, size);
 
-    // Крупинки
     for (let i = 0; i < 500; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -118,7 +113,6 @@ function makeDirtTexture() {
         ctx.fillRect(x, y, w, h);
     }
 
-    // Тёмные камушки
     for (let i = 0; i < 40; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -132,17 +126,15 @@ function makeDirtTexture() {
     return c;
 }
 
-// ---------- ТРАВА (бока — верх зелёный, низ коричневый) ----------
+// ---------- ТРАВА (бока) ----------
 function makeGrassSideTexture() {
     const size = 128;
     const c = makeCanvas(size);
     const ctx = c.getContext('2d');
 
-    // Основа — земля
     ctx.fillStyle = '#8B5A3C';
     ctx.fillRect(0, 0, size, size);
 
-    // Крупинки земли
     for (let i = 0; i < 400; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -154,7 +146,6 @@ function makeGrassSideTexture() {
         ctx.fillRect(x, y, w, h);
     }
 
-    // Верхняя зелёная полоса (трава свисает)
     for (let i = 0; i < 20; i++) {
         const x = Math.random() * size;
         const h = 8 + Math.random() * 12;
@@ -165,7 +156,6 @@ function makeGrassSideTexture() {
         ctx.fillRect(x, 0, w, h);
     }
 
-    // Основной зелёный слой сверху
     ctx.fillStyle = '#5AAD3A';
     ctx.fillRect(0, 0, size, 6);
 
@@ -178,11 +168,9 @@ function makeStoneTexture() {
     const c = makeCanvas(size);
     const ctx = c.getContext('2d');
 
-    // Базовый серый
     ctx.fillStyle = '#7F7F7F';
     ctx.fillRect(0, 0, size, size);
 
-    // Пятна разных оттенков
     for (let i = 0; i < 300; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -194,7 +182,6 @@ function makeStoneTexture() {
         ctx.fillRect(x, y, w, h);
     }
 
-    // Тёмные трещины
     for (let i = 0; i < 50; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -208,17 +195,15 @@ function makeStoneTexture() {
     return c;
 }
 
-// ---------- ДЕРЕВО (ствол) ----------
+// ---------- ДЕРЕВО (бока — кора) ----------
 function makeWoodSideTexture() {
     const size = 128;
     const c = makeCanvas(size);
     const ctx = c.getContext('2d');
 
-    // Базовый цвет коры
     ctx.fillStyle = '#6B4A2A';
     ctx.fillRect(0, 0, size, size);
 
-    // Вертикальные полосы
     for (let i = 0; i < 20; i++) {
         const x = Math.random() * size;
         const w = 1 + Math.random() * 3;
@@ -227,7 +212,6 @@ function makeWoodSideTexture() {
         ctx.fillRect(x, 0, w, size);
     }
 
-    // Шум
     const imageData = ctx.getImageData(0, 0, size, size);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
@@ -241,17 +225,15 @@ function makeWoodSideTexture() {
     return c;
 }
 
-// ---------- ДЕРЕВО (спил сверху — кольца) ----------
+// ---------- ДЕРЕВО (верх/низ — кольца спила) ----------
 function makeWoodTopTexture() {
     const size = 128;
     const c = makeCanvas(size);
     const ctx = c.getContext('2d');
 
-    // База
     ctx.fillStyle = '#A0703A';
     ctx.fillRect(0, 0, size, size);
 
-    // Концентрические кольца
     const cx = size / 2;
     const cy = size / 2;
     for (let r = 5; r < 65; r += 5) {
@@ -262,22 +244,10 @@ function makeWoodTopTexture() {
         ctx.stroke();
     }
 
-    // Центральная точка
     ctx.fillStyle = '#4F351A';
     ctx.beginPath();
     ctx.arc(cx, cy, 4, 0, Math.PI * 2);
     ctx.fill();
-
-    // Шум
-    const imageData = ctx.getImageData(0, 0, size, size);
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const variance = (Math.random() - 0.5) * 20;
-        data[i] = Math.max(0, Math.min(255, data[i] + variance));
-        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + variance));
-        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + variance));
-    }
-    ctx.putImageData(imageData, 0, 0);
 
     return c;
 }
@@ -288,11 +258,9 @@ function makeLeafTexture() {
     const c = makeCanvas(size);
     const ctx = c.getContext('2d');
 
-    // База
     ctx.fillStyle = '#2D5A1E';
     ctx.fillRect(0, 0, size, size);
 
-    // Пятна листвы
     for (let i = 0; i < 300; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -304,7 +272,6 @@ function makeLeafTexture() {
         ctx.fillRect(x, y, w, h);
     }
 
-    // Прозрачные "дырки" (чёрные точки)
     for (let i = 0; i < 80; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
@@ -335,7 +302,6 @@ function createWoodMaterial() {
     const sideMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeWoodSideTexture()) });
     const topMat = new THREE.MeshLambertMaterial({ map: textureFromCanvas(makeWoodTopTexture()) });
 
-    // Для дерева: бока — кора, верх/низ — кольца
     return [sideMat, sideMat, topMat, topMat, sideMat, sideMat];
 }
 
@@ -397,9 +363,12 @@ for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
     }
 }
 
-// ============ ПОСТРОЙКИ ============
+// ============================================================
+// ПОСТРОЙКИ
+// ============================================================
 const stoneMaterial = createStoneMaterial();
 
+// Каменный холм
 createBlock(2, 1, 2, stoneMaterial);
 createBlock(3, 1, 2, stoneMaterial);
 createBlock(2, 1, 3, stoneMaterial);
@@ -410,16 +379,54 @@ createBlock(3, 2, 2, stoneMaterial);
 const woodMaterial = createWoodMaterial();
 const leafMaterial = createLeafMaterial();
 
-createBlock(-2, 1, -2, woodMaterial);
-createBlock(-2, 2, -2, woodMaterial);
-createBlock(-2, 3, -2, woodMaterial);
+// ============================================================
+// ДЕРЕВО КАК В MINECRAFT
+// ============================================================
+const treeX = -3;
+const treeZ = -3;
 
-createBlock(-2, 4, -2, leafMaterial);
-createBlock(-1, 4, -2, leafMaterial);
-createBlock(-3, 4, -2, leafMaterial);
-createBlock(-2, 4, -1, leafMaterial);
-createBlock(-2, 4, -3, leafMaterial);
-createBlock(-2, 5, -2, leafMaterial);
+// --- СТВОЛ (5 блоков вертикально) ---
+createBlock(treeX, 1, treeZ, woodMaterial);
+createBlock(treeX, 2, treeZ, woodMaterial);
+createBlock(treeX, 3, treeZ, woodMaterial);
+createBlock(treeX, 4, treeZ, woodMaterial);
+createBlock(treeX, 5, treeZ, woodMaterial);
+
+// --- КРОНА (листва) ---
+// Нижний слой (5×5, без углов)
+createBlock(treeX - 2, 5, treeZ, leafMaterial);
+createBlock(treeX + 2, 5, treeZ, leafMaterial);
+createBlock(treeX, 5, treeZ - 2, leafMaterial);
+createBlock(treeX, 5, treeZ + 2, leafMaterial);
+
+createBlock(treeX - 1, 5, treeZ - 2, leafMaterial);
+createBlock(treeX + 1, 5, treeZ - 2, leafMaterial);
+createBlock(treeX - 1, 5, treeZ + 2, leafMaterial);
+createBlock(treeX + 1, 5, treeZ + 2, leafMaterial);
+
+createBlock(treeX - 2, 5, treeZ - 1, leafMaterial);
+createBlock(treeX + 2, 5, treeZ - 1, leafMaterial);
+createBlock(treeX - 2, 5, treeZ + 1, leafMaterial);
+createBlock(treeX + 2, 5, treeZ + 1, leafMaterial);
+
+// Средний слой (5×5 полный)
+for (let dx = -2; dx <= 2; dx++) {
+    for (let dz = -2; dz <= 2; dz++) {
+        // Пропускаем ствол
+        if (dx === 0 && dz === 0 && false) continue;
+        createBlock(treeX + dx, 6, treeZ + dz, leafMaterial);
+    }
+}
+
+// Верхний слой (3×3)
+for (let dx = -1; dx <= 1; dx++) {
+    for (let dz = -1; dz <= 1; dz++) {
+        createBlock(treeX + dx, 7, treeZ + dz, leafMaterial);
+    }
+}
+
+// Самый верх (1 блок)
+createBlock(treeX, 8, treeZ, leafMaterial);
 
 // ============================================================
 // ПОДСВЕТКА БЛОКА
