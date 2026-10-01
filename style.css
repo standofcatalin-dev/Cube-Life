@@ -444,10 +444,6 @@ html, body {
     height: 36px;
 }
 
-.inv-modal-name {
-    display: none;
-}
-
 #craft-notification {
     position: fixed;
     top: 50%;
@@ -471,7 +467,6 @@ html, body {
     transform: translate(-50%, -50%) scale(1);
 }
 
-/* ===== КНОПКИ ===== */
 #inventory-toggle-btn {
     position: absolute;
     top: 90px;
@@ -509,11 +504,6 @@ html, body {
     font-weight: bold;
 }
 
-#jump-btn:active {
-    background: rgba(255, 204, 0, 0.4);
-    transform: scale(0.9);
-}
-
 #crouch-btn {
     position: absolute;
     bottom: 180px;
@@ -533,8 +523,7 @@ html, body {
     font-weight: bold;
 }
 
-#crouch-btn:active {
-    background: rgba(160, 160, 255, 0.4);
+#jump-btn:active, #crouch-btn:active {
     transform: scale(0.9);
 }
 
