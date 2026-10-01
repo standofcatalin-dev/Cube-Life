@@ -33,6 +33,25 @@
                     <h2>🎒 Инвентарь</h2>
                     <button class="inv-modal-close">✖</button>
                 </div>
+
+                <div class="inv-player-preview">
+                    <canvas id="player-preview" width="80" height="120"></canvas>
+                    <div class="inv-player-stats">
+                        <div class="inv-stat-row">
+                            <span class="inv-stat-label">⭐ Уровень:</span>
+                            <span class="inv-stat-value">1</span>
+                        </div>
+                        <div class="inv-stat-row">
+                            <span class="inv-stat-label">❤️ HP:</span>
+                            <span class="inv-stat-value">100/100</span>
+                        </div>
+                        <div class="inv-stat-row">
+                            <span class="inv-stat-label">💰 Золото:</span>
+                            <span class="inv-stat-value">50</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="inventory-modal-grid" class="inv-modal-grid"></div>
                 <div class="inv-modal-hint">Нажми на блок • Y или Esc — закрыть</div>
             </div>
