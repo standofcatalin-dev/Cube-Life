@@ -27,7 +27,6 @@
 
         <div id="inventory-bar"></div>
 
-        <!-- ИНВЕНТАРЬ + КРАФТ В ОДНОМ ОКНЕ -->
         <div id="inventory-modal">
             <div class="inv-modal-content">
                 <div class="inv-modal-header">
@@ -35,7 +34,6 @@
                     <button class="inv-modal-close">✖</button>
                 </div>
 
-                <!-- Превью игрока -->
                 <div class="inv-player-preview">
                     <canvas id="player-preview" width="80" height="120"></canvas>
                     <div class="inv-player-stats">
@@ -54,7 +52,6 @@
                     </div>
                 </div>
 
-                <!-- КРАФТ 3x3 -->
                 <div class="craft-section-inv">
                     <div class="craft-label">🔨 КРАФТ</div>
                     <div class="craft-grid-wrapper">
@@ -71,7 +68,6 @@
                     </div>
                 </div>
 
-                <!-- Все блоки -->
                 <div class="craft-label">📦 БЛОКИ (нажми — добавить в крафт)</div>
                 <div id="inventory-modal-grid" class="inv-modal-grid"></div>
             </div>
@@ -99,7 +95,7 @@
             <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
         </div>
 
-        <div id="hint">Y — инвентарь и крафт • V — камера • ЛКМ поставить • ПКМ сломать</div>
+        <div id="hint">Y — инвентарь • V — камера • ЛКМ поставить • ПКМ сломать</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
