@@ -110,7 +110,6 @@ html, body {
     font-weight: bold;
 }
 
-/* HOTBAR */
 #inventory-bar {
     position: absolute;
     bottom: 20px;
@@ -124,11 +123,14 @@ html, body {
     border-radius: 6px;
     z-index: 10;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    max-width: 95vw;
+    overflow-x: auto;
 }
 
 .inv-slot {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
     background: rgba(139, 139, 139, 0.5);
     border: 2px solid #3a3a3a;
     border-radius: 4px;
@@ -141,11 +143,6 @@ html, body {
     user-select: none;
 }
 
-.inv-slot:hover {
-    background: rgba(160, 160, 160, 0.6);
-    border-color: #5a5a5a;
-}
-
 .inv-slot.active {
     border: 3px solid #ffffff;
     background: rgba(180, 180, 180, 0.7);
@@ -155,8 +152,8 @@ html, body {
 }
 
 .inv-icon-img {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     image-rendering: pixelated;
     border-radius: 3px;
     pointer-events: none;
@@ -173,8 +170,8 @@ html, body {
     pointer-events: none;
 }
 
-/* ===== БОЛЬШОЙ ИНВЕНТАРЬ ===== */
-#inventory-modal {
+/* ===== ИНВЕНТАРЬ ===== */
+#inventory-modal, #crafting-modal {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.85);
@@ -185,11 +182,11 @@ html, body {
     padding: 20px;
 }
 
-#inventory-modal.open {
+#inventory-modal.open, #crafting-modal.open {
     display: flex;
 }
 
-.inv-modal-content {
+.inv-modal-content, .craft-modal-content {
     background: #1e1e1e;
     border: 3px solid #5a5a5a;
     border-radius: 12px;
@@ -215,7 +212,7 @@ html, body {
     color: #ffffff;
 }
 
-.inv-modal-close {
+.inv-modal-close, .craft-modal-close {
     width: 36px;
     height: 36px;
     border-radius: 6px;
@@ -229,11 +226,10 @@ html, body {
     justify-content: center;
 }
 
-.inv-modal-close:hover {
+.inv-modal-close:hover, .craft-modal-close:hover {
     background: rgba(255, 68, 68, 0.3);
 }
 
-/* ПРЕВЬЮ ИГРОКА */
 .inv-player-preview {
     display: flex;
     align-items: center;
@@ -270,16 +266,9 @@ html, body {
     border-radius: 5px;
 }
 
-.inv-stat-label {
-    color: rgba(255, 255, 255, 0.7);
-}
+.inv-stat-label { color: rgba(255, 255, 255, 0.7); }
+.inv-stat-value { color: #ffc800; font-weight: bold; }
 
-.inv-stat-value {
-    color: #ffc800;
-    font-weight: bold;
-}
-
-/* СЕТКА БЛОКОВ */
 .inv-modal-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -300,11 +289,6 @@ html, body {
     position: relative;
     transition: all 0.15s;
     padding: 6px;
-}
-
-.inv-modal-slot:hover {
-    background: rgba(160, 160, 160, 0.5);
-    border-color: #8a8a8a;
 }
 
 .inv-modal-slot.active {
@@ -333,14 +317,204 @@ html, body {
     margin-top: 4px;
 }
 
-#inventory-toggle-btn {
+/* ===== КРАФТ ===== */
+.craft-section {
+    margin-bottom: 16px;
+}
+
+.craft-grid-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.craft-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid #3a3a3a;
+    border-radius: 8px;
+}
+
+.craft-cell {
+    width: 50px;
+    height: 50px;
+    background: rgba(139, 139, 139, 0.3);
+    border: 2px solid #5a5a5a;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.craft-cell.empty {
+    background: rgba(50, 50, 50, 0.5);
+    border-style: dashed;
+}
+
+.craft-cell:hover {
+    border-color: #ffc800;
+}
+
+.craft-cell .inv-icon-img {
+    width: 40px;
+    height: 40px;
+}
+
+.craft-arrow {
+    font-size: 32px;
+    color: #7eff7e;
+    font-weight: bold;
+}
+
+.craft-result {
+    width: 70px;
+    height: 70px;
+    background: rgba(139, 139, 139, 0.3);
+    border: 3px solid #3a3a3a;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    padding: 4px;
+}
+
+.craft-result.active {
+    border-color: #ffc800;
+    background: rgba(255, 200, 0, 0.2);
+    box-shadow: 0 0 20px rgba(255, 200, 0, 0.7);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.craft-result .inv-icon-img {
+    width: 40px;
+    height: 40px;
+}
+
+.craft-result-name {
+    font-size: 9px;
+    color: #ffc800;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.craft-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.craft-action-btn {
+    flex: 1;
+    padding: 12px;
+    background: rgba(126, 255, 126, 0.2);
+    border: 2px solid #7eff7e;
+    border-radius: 8px;
+    color: #7eff7e;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.craft-action-btn:active {
+    background: rgba(126, 255, 126, 0.4);
+    transform: scale(0.97);
+}
+
+.craft-action-btn.reset {
+    background: rgba(255, 100, 100, 0.2);
+    border-color: #ff6464;
+    color: #ff6464;
+}
+
+.craft-blocks-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.craft-blocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 50px);
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.craft-block {
+    width: 50px;
+    height: 50px;
+    background: rgba(139, 139, 139, 0.3);
+    border: 2px solid #5a5a5a;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.craft-block:hover {
+    border-color: #7eff7e;
+    background: rgba(126, 255, 126, 0.2);
+}
+
+.craft-block:active {
+    transform: scale(0.9);
+}
+
+.craft-block .inv-icon-img {
+    width: 38px;
+    height: 38px;
+}
+
+/* Уведомление */
+#craft-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    background: rgba(40, 200, 40, 0.95);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    z-index: 200;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+#craft-notification.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Кнопки */
+#inventory-toggle-btn, #crafting-toggle-btn {
     position: absolute;
-    top: 90px;
-    right: 80px;
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    border: 3px solid #7eff7e;
+    border: 3px solid;
     background: rgba(0, 0, 0, 0.6);
     color: white;
     font-size: 24px;
@@ -351,8 +525,20 @@ html, body {
     z-index: 10;
 }
 
-#inventory-toggle-btn:active {
-    background: rgba(126, 255, 126, 0.4);
+#inventory-toggle-btn {
+    top: 90px;
+    right: 80px;
+    border-color: #7eff7e;
+}
+
+#crafting-toggle-btn {
+    top: 90px;
+    right: 144px;
+    border-color: #ffa500;
+}
+
+#inventory-toggle-btn:active,
+#crafting-toggle-btn:active {
     transform: scale(0.9);
 }
 
