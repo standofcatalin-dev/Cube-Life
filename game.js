@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 6: Инвентарь по клавише Y
+// CUBE LIFE — Этап 7: Полный инвентарь + фиксы
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -40,6 +40,26 @@ scene.add(ambientLight);
 const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
 sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
+
+// ============================================================
+// ХЕЛПЕРЫ ЦВЕТА
+// ============================================================
+
+function lightenColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.min(255, (num >> 16) + percent);
+    const g = Math.min(255, ((num >> 8) & 0x00FF) + percent);
+    const b = Math.min(255, (num & 0x0000FF) + percent);
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
+function darkenColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.max(0, (num >> 16) - percent);
+    const g = Math.max(0, ((num >> 8) & 0x00FF) - percent);
+    const b = Math.max(0, (num & 0x0000FF) - percent);
+    return `rgb(${r}, ${g}, ${b})`;
+}
 
 // ============================================================
 // ТЕКСТУРЫ
@@ -134,11 +154,11 @@ function createDirtMaterial() {
 // ============================================================
 
 const INVENTORY = [
-    { name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#8B6535' },
+    { name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#4A9D2A' },
     { name: 'Камень', material: createStoneMaterial(),  color: '#808080', secondaryColor: '#6F6F6F' },
-    { name: 'Дерево', material: createWoodMaterial(),   color: '#6B4423', secondaryColor: '#8B6535' },
-    { name: 'Листва', material: createLeafMaterial(),   color: '#2D5A1E', secondaryColor: '#3D6A2E' },
-    { name: 'Земля',  material: createDirtMaterial(),   color: '#5A3A1A', secondaryColor: '#7A4E30' }
+    { name: 'Дерево', material: createWoodMaterial(),   color: '#6B4423', secondaryColor: '#5A3A1F' },
+    { name: 'Листва', material: createLeafMaterial(),   color: '#2D5A1E', secondaryColor: '#1D4A0E' },
+    { name: 'Земля',  material: createDirtMaterial(),   color: '#5A3A1A', secondaryColor: '#4A2F18' }
 ];
 
 let selectedSlot = 0;
@@ -368,15 +388,12 @@ document.addEventListener('keydown', (e) => {
     if (normalizedKey === 'v') {
         toggleCamera();
     }
-    // Y — открыть/закрыть инвентарь
     if (normalizedKey === 'y') {
         toggleInventory();
     }
-    // 1-9 — выбор слота
-    if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) {
+    if (['1', '2', '3', '4', '5'].includes(key)) {
         selectSlot(parseInt(key) - 1);
     }
-    // Esc — закрыть инвентарь
     if (key === 'escape' && inventoryOpen) {
         toggleInventory();
     }
@@ -416,16 +433,18 @@ function toggleCamera() {
 }
 window.toggleCamera = toggleCamera;
 
-// ============ ИНВЕНТАРЬ (большое окно) ============
+// ============ ИНВЕНТАРЬ ============
 
 function toggleInventory() {
     inventoryOpen = !inventoryOpen;
     const modal = document.getElementById('inventory-modal');
-    if (!modal) return;
+    if (!modal) {
+        console.log('inventory-modal не найден');
+        return;
+    }
 
     if (inventoryOpen) {
         modal.classList.add('open');
-        // Освобождаем мышь, если захвачена
         if (isPointerLocked) {
             document.exitPointerLock();
         }
@@ -435,13 +454,10 @@ function toggleInventory() {
 }
 window.toggleInventory = toggleInventory;
 
-// ============ ВЫБОР БЛОКА ============
-
 function selectSlot(index) {
     if (index < 0 || index >= INVENTORY.length) return;
     selectedSlot = index;
 
-    // Обновляем hotbar
     document.querySelectorAll('.inv-slot[data-hotbar]').forEach((el, i) => {
         if (i === index) {
             el.classList.add('active');
@@ -450,7 +466,6 @@ function selectSlot(index) {
         }
     });
 
-    // Обновляем большой инвентарь
     document.querySelectorAll('.inv-modal-slot').forEach((el, i) => {
         if (i === index) {
             el.classList.add('active');
@@ -459,7 +474,6 @@ function selectSlot(index) {
         }
     });
 
-    // Обновляем текст "Блок: ..."
     const selectedEl = document.getElementById('selected-block');
     if (selectedEl) {
         selectedEl.textContent = INVENTORY[index].name;
@@ -625,7 +639,6 @@ function update() {
     human.position.z = player.z;
     human.rotation.y = player.angle;
 
-    // ============ КАМЕРА ============
     if (cameraMode === 3) {
         if (keys['left']) cameraFollowAngle += 0.03;
         if (keys['right']) cameraFollowAngle -= 0.03;
@@ -658,7 +671,6 @@ function update() {
         human.visible = false;
     }
 
-    // ============ ПОДСВЕТКА ============
     if (!inventoryOpen) {
         const hit = getTargetBlock();
         if (hit) {
@@ -671,14 +683,12 @@ function update() {
         highlightBox.visible = false;
     }
 
-    // ============ HUD ============
     const worldInfoEl = document.getElementById('world-info');
     if (worldInfoEl) {
         worldInfoEl.textContent = blockMap.size + ' блоков';
     }
 }
 
-// ============ ЦИКЛ ============
 function animate() {
     requestAnimationFrame(animate);
     update();
@@ -687,50 +697,52 @@ function animate() {
 
 animate();
 
-// ============ РЕСАЙЗ ============
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ============ СКРЫТЬ КНОПКИ НА ПК ============
 if (!isMobile) {
     const mobileOnly = document.querySelectorAll('.mobile-only');
     mobileOnly.forEach(el => el.style.display = 'none');
 }
 
 // ============================================================
-// ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА
+// ИКОНКИ И ИНТЕРФЕЙС
 // ============================================================
 
 function makeInvIcon(color, secondaryColor) {
-    const size = 32;
+    const size = 48;
     const c = document.createElement('canvas');
     c.width = size;
     c.height = size;
     const ctx = c.getContext('2d');
 
-    ctx.fillStyle = color;
+    const gradient = ctx.createLinearGradient(0, 0, 0, size);
+    gradient.addColorStop(0, lightenColor(color, 30));
+    gradient.addColorStop(1, darkenColor(color, 30));
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, size, size);
 
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 60; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
-        const w = 2 + Math.random() * 3;
-        const h = 2 + Math.random() * 3;
+        const w = 3 + Math.random() * 5;
+        const h = 3 + Math.random() * 5;
         ctx.fillStyle = secondaryColor;
+        ctx.globalAlpha = 0.6;
         ctx.fillRect(x, y, w, h);
     }
+    ctx.globalAlpha = 1;
 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, size - 2, size - 2);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(1.5, 1.5, size - 3, size - 3);
 
     return c.toDataURL();
 }
 
-// Hotbar
 function initHotbar() {
     const invBar = document.getElementById('inventory-bar');
     if (!invBar) return;
@@ -761,7 +773,6 @@ function initHotbar() {
     });
 }
 
-// Большой инвентарь (модальное окно)
 function initInventoryModal() {
     const modal = document.getElementById('inventory-modal-grid');
     if (!modal) return;
@@ -795,16 +806,20 @@ function initInventoryModal() {
     });
 }
 
-// Инициализация
 initHotbar();
 initInventoryModal();
 
-// Делаем кнопку Y для мобильных — добавляем на панель
+// Кнопка 🎒 для мобильных
 const yBtn = document.createElement('button');
 yBtn.id = 'inventory-toggle-btn';
 yBtn.innerHTML = '🎒';
 yBtn.onclick = toggleInventory;
 document.body.appendChild(yBtn);
 
-// Первый выбор
+// Кнопка закрытия в модальном окне
+const closeBtn = document.querySelector('.inv-modal-close');
+if (closeBtn) {
+    closeBtn.onclick = toggleInventory;
+}
+
 selectSlot(0);
