@@ -27,6 +27,7 @@
 
         <div id="inventory-bar"></div>
 
+        <!-- Инвентарь -->
         <div id="inventory-modal">
             <div class="inv-modal-content">
                 <div class="inv-modal-header">
@@ -57,6 +58,39 @@
             </div>
         </div>
 
+        <!-- Крафт -->
+        <div id="crafting-modal">
+            <div class="craft-modal-content">
+                <div class="inv-modal-header">
+                    <h2>🔨 Крафт</h2>
+                    <button class="craft-modal-close">✖</button>
+                </div>
+
+                <div class="craft-section">
+                    <div class="craft-grid-wrapper">
+                        <div id="crafting-grid" class="craft-grid"></div>
+                        <div class="craft-arrow">→</div>
+                        <div id="crafting-result" class="craft-result">
+                            <img id="crafting-result-img" class="inv-icon-img" alt="Результат">
+                            <div id="crafting-result-name" class="craft-result-name">...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="craft-actions">
+                    <button id="craft-btn" class="craft-action-btn">✨ Создать</button>
+                    <button id="craft-reset-btn" class="craft-action-btn reset">🔄 Сброс</button>
+                </div>
+
+                <div class="craft-blocks-label">Нажми на блок, чтобы добавить его в сетку:</div>
+                <div id="crafting-blocks" class="craft-blocks"></div>
+
+                <div class="inv-modal-hint">R — закрыть • Клик по слоту сетки — убрать</div>
+            </div>
+        </div>
+
+        <div id="craft-notification"></div>
+
         <div id="controls" class="mobile-only">
             <div class="controls-left">
                 <button class="ctrl-btn"
@@ -77,7 +111,7 @@
             <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
         </div>
 
-        <div id="hint">Y — инвентарь • 1-5 — выбор • ЛКМ поставить • ПКМ сломать</div>
+        <div id="hint">Y — инвентарь • R — крафт • V — камера • ЛКМ поставить • ПКМ сломать</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
