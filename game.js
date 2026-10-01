@@ -1,12 +1,9 @@
 // ============================================================
-// CUBE LIFE — Этап 13: Прыжок + Присед
+// CUBE LIFE — Этап 14: Выживание + Счётчики + Меню
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
-if (tg) {
-    tg.ready();
-    tg.expand();
-}
+if (tg) { tg.ready(); tg.expand(); }
 
 const canvas = document.getElementById('game-canvas');
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -16,12 +13,7 @@ scene.background = new THREE.Color(0x87CEEB);
 scene.fog = new THREE.Fog(0x87CEEB, 30, 80);
 
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 500);
-
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: false,
-    powerPreference: "high-performance"
-});
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(1);
 
@@ -30,6 +22,10 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
 sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
+// ============================================================
+// ХЕЛПЕРЫ
+// ============================================================
+
 function lightenColor(hex, percent) {
     const num = parseInt(hex.replace('#', ''), 16);
     const r = Math.min(255, (num >> 16) + percent);
@@ -37,7 +33,6 @@ function lightenColor(hex, percent) {
     const b = Math.min(255, (num & 0x0000FF) + percent);
     return `rgb(${r}, ${g}, ${b})`;
 }
-
 function darkenColor(hex, percent) {
     const num = parseInt(hex.replace('#', ''), 16);
     const r = Math.max(0, (num >> 16) - percent);
@@ -48,8 +43,7 @@ function darkenColor(hex, percent) {
 
 function createTexture(baseColor, noiseAmount = 30, size = 64) {
     const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
+    c.width = size; c.height = size;
     const ctx = c.getContext('2d');
     ctx.fillStyle = baseColor;
     ctx.fillRect(0, 0, size, size);
@@ -71,8 +65,7 @@ function createTexture(baseColor, noiseAmount = 30, size = 64) {
 function createWoodTexture() {
     const size = 64;
     const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
+    c.width = size; c.height = size;
     const ctx = c.getContext('2d');
     ctx.fillStyle = '#6B4423';
     ctx.fillRect(0, 0, size, size);
@@ -90,8 +83,7 @@ function createWoodTexture() {
 function createPlankTexture() {
     const size = 64;
     const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
+    c.width = size; c.height = size;
     const ctx = c.getContext('2d');
     ctx.fillStyle = '#A0703A';
     ctx.fillRect(0, 0, size, size);
@@ -117,11 +109,7 @@ function createGrassMaterial() {
         new THREE.MeshLambertMaterial({ map: createTexture('#8B6535') })
     ];
 }
-
-function createStoneMaterial() {
-    return new THREE.MeshLambertMaterial({ map: createTexture('#808080') });
-}
-
+function createStoneMaterial() { return new THREE.MeshLambertMaterial({ map: createTexture('#808080') }); }
 function createWoodMaterial() {
     return [
         new THREE.MeshLambertMaterial({ map: createWoodTexture() }),
@@ -132,24 +120,13 @@ function createWoodMaterial() {
         new THREE.MeshLambertMaterial({ map: createWoodTexture() })
     ];
 }
-
-function createLeafMaterial() {
-    return new THREE.MeshLambertMaterial({ map: createTexture('#2D5A1E', 40) });
-}
-
-function createDirtMaterial() {
-    return new THREE.MeshLambertMaterial({ map: createTexture('#5A3A1A', 40) });
-}
-
-function createPlankMaterial() {
-    return new THREE.MeshLambertMaterial({ map: createPlankTexture() });
-}
-
+function createLeafMaterial() { return new THREE.MeshLambertMaterial({ map: createTexture('#2D5A1E', 40) }); }
+function createDirtMaterial() { return new THREE.MeshLambertMaterial({ map: createTexture('#5A3A1A', 40) }); }
+function createPlankMaterial() { return new THREE.MeshLambertMaterial({ map: createPlankTexture() }); }
 function createBrickMaterial() {
     const size = 64;
     const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
+    c.width = size; c.height = size;
     const ctx = c.getContext('2d');
     ctx.fillStyle = '#B03030';
     ctx.fillRect(0, 0, size, size);
@@ -165,31 +142,42 @@ function createBrickMaterial() {
     tex.minFilter = THREE.NearestFilter;
     return new THREE.MeshLambertMaterial({ map: tex });
 }
+function createSandMaterial() { return new THREE.MeshLambertMaterial({ map: createTexture('#E8D5A0', 15) }); }
+function createCoalMaterial() { return new THREE.MeshLambertMaterial({ map: createTexture('#2A2A2A', 40) }); }
 
-function createSandMaterial() {
-    return new THREE.MeshLambertMaterial({ map: createTexture('#E8D5A0', 15) });
-}
-
-function createCoalMaterial() {
-    return new THREE.MeshLambertMaterial({ map: createTexture('#2A2A2A', 40) });
-}
+// ============================================================
+// ВСЕ БЛОКИ
+// ============================================================
 
 const ALL_BLOCKS = [
-    { id: 0, name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#4A9D2A' },
-    { id: 1, name: 'Камень', material: createStoneMaterial(),  color: '#808080', secondaryColor: '#6F6F6F' },
-    { id: 2, name: 'Дерево', material: createWoodMaterial(),   color: '#6B4423', secondaryColor: '#5A3A1F' },
-    { id: 3, name: 'Листва', material: createLeafMaterial(),   color: '#2D5A1E', secondaryColor: '#1D4A0E' },
-    { id: 4, name: 'Земля',  material: createDirtMaterial(),   color: '#5A3A1A', secondaryColor: '#4A2F18' },
-    { id: 5, name: 'Доски',  material: createPlankMaterial(),  color: '#A0703A', secondaryColor: '#8B6535' },
-    { id: 6, name: 'Кирпич', material: createBrickMaterial(),  color: '#B03030', secondaryColor: '#8B2020' },
-    { id: 7, name: 'Песок',  material: createSandMaterial(),   color: '#E8D5A0', secondaryColor: '#C8B580' },
-    { id: 8, name: 'Уголь',  material: createCoalMaterial(),   color: '#2A2A2A', secondaryColor: '#000000' }
+    { id: 0, name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#4A9D2A', physics: false },
+    { id: 1, name: 'Камень', material: createStoneMaterial(),  color: '#808080', secondaryColor: '#6F6F6F', physics: false },
+    { id: 2, name: 'Дерево', material: createWoodMaterial(),   color: '#6B4423', secondaryColor: '#5A3A1F', physics: false },
+    { id: 3, name: 'Листва', material: createLeafMaterial(),   color: '#2D5A1E', secondaryColor: '#1D4A0E', physics: false },
+    { id: 4, name: 'Земля',  material: createDirtMaterial(),   color: '#5A3A1A', secondaryColor: '#4A2F18', physics: false },
+    { id: 5, name: 'Доски',  material: createPlankMaterial(),  color: '#A0703A', secondaryColor: '#8B6535', physics: false },
+    { id: 6, name: 'Кирпич', material: createBrickMaterial(),  color: '#B03030', secondaryColor: '#8B2020', physics: false },
+    { id: 7, name: 'Песок',  material: createSandMaterial(),   color: '#E8D5A0', secondaryColor: '#C8B580', physics: true },
+    { id: 8, name: 'Уголь',  material: createCoalMaterial(),   color: '#2A2A2A', secondaryColor: '#000000', physics: false }
 ];
 
-let unlockedBlocks = [0, 1, 2, 3, 4];
+let unlockedBlocks = [0, 1, 2, 3, 4, 7];
+let blockCounts = {}; // { blockId: count }
 let selectedSlot = 0;
 let inventoryOpen = false;
+let gameStarted = false;
+
 const ICON_CACHE = {};
+
+// ============================================================
+// ФИЗИКА ПАДАЮЩИХ БЛОКОВ
+// ============================================================
+
+const fallingBlocks = []; // { mesh, blockId, x, y, z, vy }
+
+// ============================================================
+// БЛОКИ В МИРЕ
+// ============================================================
 
 const BLOCK_SIZE = 1;
 const blockMap = new Map();
@@ -198,93 +186,120 @@ function blockKey(x, y, z) {
     return `${Math.round(x)},${Math.round(y)},${Math.round(z)}`;
 }
 
-function createBlock(x, y, z, material) {
+function createBlock(x, y, z, blockId) {
+    const block = ALL_BLOCKS[blockId];
     const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-    const block = new THREE.Mesh(geometry, material);
-    block.position.set(x, y, z);
-    block.userData.isBlock = true;
-    scene.add(block);
-    blockMap.set(blockKey(x, y, z), block);
-    return block;
+    const mesh = new THREE.Mesh(geometry, block.material);
+    mesh.position.set(x, y, z);
+    mesh.userData.isBlock = true;
+    mesh.userData.blockId = blockId;
+    scene.add(mesh);
+    blockMap.set(blockKey(x, y, z), mesh);
+    return mesh;
 }
 
-function removeBlock(block) {
-    const key = blockKey(block.position.x, block.position.y, block.position.z);
+function removeBlock(mesh) {
+    const key = blockKey(mesh.position.x, mesh.position.y, mesh.position.z);
     blockMap.delete(key);
-    scene.remove(block);
-    block.geometry.dispose();
+    scene.remove(mesh);
+    mesh.geometry.dispose();
 }
+
+// Проверка блока под песком
+function checkPhysics(x, y, z) {
+    const under = blockMap.get(blockKey(x, y - 1, z));
+    if (!under && y > 0) {
+        // Блок падает
+        startFalling(x, y, z);
+    }
+}
+
+function startFalling(x, y, z) {
+    const mesh = blockMap.get(blockKey(x, y, z));
+    if (!mesh) return;
+
+    const blockId = mesh.userData.blockId;
+    if (!ALL_BLOCKS[blockId].physics) return;
+
+    const key = blockKey(x, y, z);
+    blockMap.delete(key);
+
+    fallingBlocks.push({
+        mesh: mesh,
+        blockId: blockId,
+        vy: 0
+    });
+}
+
+// ============================================================
+// МИР
+// ============================================================
 
 const WORLD_SIZE = 8;
-const grassMaterial = createGrassMaterial();
 
 for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
     for (let z = -WORLD_SIZE / 2; z < WORLD_SIZE / 2; z++) {
-        createBlock(x, 0, z, grassMaterial);
+        createBlock(x, 0, z, 0); // Трава
     }
 }
 
-const stoneMaterial = createStoneMaterial();
+// Холм
+createBlock(2, 1, 2, 1);
+createBlock(3, 1, 2, 1);
+createBlock(2, 1, 3, 1);
+createBlock(3, 1, 3, 1);
+createBlock(2, 2, 2, 1);
+createBlock(3, 2, 2, 1);
 
-createBlock(2, 1, 2, stoneMaterial);
-createBlock(3, 1, 2, stoneMaterial);
-createBlock(2, 1, 3, stoneMaterial);
-createBlock(3, 1, 3, stoneMaterial);
-createBlock(2, 2, 2, stoneMaterial);
-createBlock(3, 2, 2, stoneMaterial);
+// Дерево
+const treeX = -3, treeZ = -3;
 
-const woodMaterial = createWoodMaterial();
-const leafMaterial = createLeafMaterial();
+createBlock(treeX, 1, treeZ, 2);
+createBlock(treeX, 2, treeZ, 2);
+createBlock(treeX, 3, treeZ, 2);
+createBlock(treeX, 4, treeZ, 2);
+createBlock(treeX, 5, treeZ, 2);
 
-const treeX = -3;
-const treeZ = -3;
-
-createBlock(treeX, 1, treeZ, woodMaterial);
-createBlock(treeX, 2, treeZ, woodMaterial);
-createBlock(treeX, 3, treeZ, woodMaterial);
-createBlock(treeX, 4, treeZ, woodMaterial);
-createBlock(treeX, 5, treeZ, woodMaterial);
-
-createBlock(treeX - 2, 5, treeZ, leafMaterial);
-createBlock(treeX + 2, 5, treeZ, leafMaterial);
-createBlock(treeX, 5, treeZ - 2, leafMaterial);
-createBlock(treeX, 5, treeZ + 2, leafMaterial);
-
-createBlock(treeX - 1, 5, treeZ - 2, leafMaterial);
-createBlock(treeX + 1, 5, treeZ - 2, leafMaterial);
-createBlock(treeX - 1, 5, treeZ + 2, leafMaterial);
-createBlock(treeX + 1, 5, treeZ + 2, leafMaterial);
-
-createBlock(treeX - 2, 5, treeZ - 1, leafMaterial);
-createBlock(treeX + 2, 5, treeZ - 1, leafMaterial);
-createBlock(treeX - 2, 5, treeZ + 1, leafMaterial);
-createBlock(treeX + 2, 5, treeZ + 1, leafMaterial);
+createBlock(treeX - 2, 5, treeZ, 3);
+createBlock(treeX + 2, 5, treeZ, 3);
+createBlock(treeX, 5, treeZ - 2, 3);
+createBlock(treeX, 5, treeZ + 2, 3);
+createBlock(treeX - 1, 5, treeZ - 2, 3);
+createBlock(treeX + 1, 5, treeZ - 2, 3);
+createBlock(treeX - 1, 5, treeZ + 2, 3);
+createBlock(treeX + 1, 5, treeZ + 2, 3);
+createBlock(treeX - 2, 5, treeZ - 1, 3);
+createBlock(treeX + 2, 5, treeZ - 1, 3);
+createBlock(treeX - 2, 5, treeZ + 1, 3);
+createBlock(treeX + 2, 5, treeZ + 1, 3);
 
 for (let dx = -2; dx <= 2; dx++) {
     for (let dz = -2; dz <= 2; dz++) {
-        createBlock(treeX + dx, 6, treeZ + dz, leafMaterial);
+        createBlock(treeX + dx, 6, treeZ + dz, 3);
     }
 }
-
 for (let dx = -1; dx <= 1; dx++) {
     for (let dz = -1; dz <= 1; dz++) {
-        createBlock(treeX + dx, 7, treeZ + dz, leafMaterial);
+        createBlock(treeX + dx, 7, treeZ + dz, 3);
     }
 }
+createBlock(treeX, 8, treeZ, 3);
 
-createBlock(treeX, 8, treeZ, leafMaterial);
+// Немного песка
+createBlock(-4, 1, 3, 7);
+createBlock(-4, 2, 3, 7);
+createBlock(-4, 3, 3, 7);
 
 const highlightBox = new THREE.Mesh(
     new THREE.BoxGeometry(BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02),
-    new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.8
-    })
+    new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 })
 );
 highlightBox.visible = false;
 scene.add(highlightBox);
+
+// ============================================================
+// ЧЕЛОВЕЧЕК
+// ============================================================
 
 function createHuman() {
     const human = new THREE.Group();
@@ -364,20 +379,105 @@ const human = createHuman();
 human.position.set(0, 0, 0);
 scene.add(human);
 
+// ============================================================
+// МЕНЮ — РИСУЕМ ЧЕЛОВЕЧКА
+// ============================================================
+
+function drawMenuPlayer() {
+    const c = document.getElementById('menu-player-canvas');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    const W = c.width, H = c.height;
+
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+    skyGrad.addColorStop(0, '#87CEEB');
+    skyGrad.addColorStop(1, '#B0E0F5');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.beginPath();
+    ctx.arc(30, 40, 12, 0, Math.PI * 2);
+    ctx.arc(45, 42, 15, 0, Math.PI * 2);
+    ctx.arc(120, 50, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#5AAD3A';
+    ctx.fillRect(0, H - 40, W, 40);
+    ctx.fillStyle = '#8B6535';
+    ctx.fillRect(0, H - 20, W, 20);
+
+    const cx = W / 2;
+    const cy = H - 40;
+
+    ctx.fillStyle = '#333366';
+    ctx.fillRect(cx - 22, cy - 40, 18, 40);
+    ctx.fillRect(cx + 4, cy - 40, 18, 40);
+
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(cx - 24, cy - 10, 22, 10);
+    ctx.fillRect(cx + 2, cy - 10, 22, 10);
+
+    ctx.fillStyle = '#3366cc';
+    ctx.fillRect(cx - 24, cy - 100, 48, 60);
+    ctx.fillRect(cx - 36, cy - 96, 12, 56);
+    ctx.fillRect(cx + 24, cy - 96, 12, 56);
+
+    ctx.fillStyle = '#ffcc99';
+    ctx.fillRect(cx - 36, cy - 44, 12, 12);
+    ctx.fillRect(cx + 24, cy - 44, 12, 12);
+    ctx.fillRect(cx - 20, cy - 140, 40, 40);
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(cx - 12, cy - 124, 6, 6);
+    ctx.fillRect(cx + 6, cy - 124, 6, 6);
+
+    ctx.fillStyle = '#cc6666';
+    ctx.fillRect(cx - 8, cy - 108, 16, 4);
+
+    ctx.fillStyle = '#4a2c0a';
+    ctx.fillRect(cx - 22, cy - 144, 44, 12);
+    ctx.fillRect(cx - 22, cy - 132, 6, 24);
+    ctx.fillRect(cx + 16, cy - 132, 6, 24);
+}
+
+drawMenuPlayer();
+
+// ============================================================
+// СТАРТ ИГРЫ
+// ============================================================
+
+function startGame(mode) {
+    gameStarted = true;
+    document.getElementById('start-menu').classList.add('hidden');
+
+    // Настройка блоков в зависимости от режима
+    if (mode === 'survival0') {
+        // Всё по 0
+        blockCounts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 7: 0 };
+    } else if (mode === 'creative') {
+        // Всё по 999
+        blockCounts = { 0: 999, 1: 999, 2: 999, 3: 999, 4: 999, 5: 999, 6: 999, 7: 999, 8: 999 };
+        unlockedBlocks = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    } else {
+        // survival64 — базовые по 64
+        blockCounts = { 0: 64, 1: 64, 2: 64, 3: 64, 4: 64, 7: 64 };
+    }
+
+    localStorage.setItem('cubeLifeMode', mode);
+
+    initHotbar();
+    initInventoryModal();
+    selectSlot(0);
+}
+window.startGame = startGame;
+
+// ============================================================
+// УПРАВЛЕНИЕ
+// ============================================================
+
 const keys = {};
-
-const player = {
-    x: 0,
-    z: 0,
-    y: 0,
-    vy: 0,
-    angle: 0,
-    speed: 0.08,
-    turnSpeed: 0.05,
-    isJumping: false,
-    isCrouching: false
-};
-
+const player = { x: 0, z: 0, y: 0, vy: 0, angle: 0, speed: 0.08, turnSpeed: 0.05, isJumping: false, isCrouching: false };
 const GRAVITY = -0.015;
 const JUMP_FORCE = 0.18;
 
@@ -388,6 +488,7 @@ let cameraPitchAngle = 0;
 const KEY_MAP = { 'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v', 'н': 'y' };
 
 document.addEventListener('keydown', (e) => {
+    if (!gameStarted) return;
     const key = e.key.toLowerCase();
     const normalizedKey = KEY_MAP[key] || key;
     keys[normalizedKey] = true;
@@ -397,10 +498,7 @@ document.addEventListener('keydown', (e) => {
     if (normalizedKey === 'y') toggleInventory();
     if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) selectSlot(parseInt(key) - 1);
     if (key === 'escape' && inventoryOpen) toggleInventory();
-
-    if (key === ' ' || normalizedKey === 'space') {
-        jump();
-    }
+    if (key === ' ' || normalizedKey === 'space') jump();
 });
 
 document.addEventListener('keyup', (e) => {
@@ -409,8 +507,15 @@ document.addEventListener('keyup', (e) => {
     keys[normalizedKey] = false;
 });
 
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') player.isCrouching = true;
+});
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') player.isCrouching = false;
+});
+
 document.addEventListener('wheel', (e) => {
-    if (isPointerLocked && !inventoryOpen) {
+    if (isPointerLocked && !inventoryOpen && gameStarted) {
         if (e.deltaY > 0) selectSlot((selectedSlot + 1) % unlockedBlocks.length);
         else selectSlot((selectedSlot - 1 + unlockedBlocks.length) % unlockedBlocks.length);
     }
@@ -470,24 +575,8 @@ function jump() {
 }
 window.jump = jump;
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Shift') {
-        player.isCrouching = true;
-    }
-});
-
-document.addEventListener('keyup', (e) => {
-    if (e.key === 'Shift') {
-        player.isCrouching = false;
-    }
-});
-
-function crouchStart() {
-    player.isCrouching = true;
-}
-function crouchEnd() {
-    player.isCrouching = false;
-}
+function crouchStart() { player.isCrouching = true; }
+function crouchEnd() { player.isCrouching = false; }
 window.crouchStart = crouchStart;
 window.crouchEnd = crouchEnd;
 
@@ -495,7 +584,7 @@ let isPointerLocked = false;
 
 if (!isMobile) {
     canvas.addEventListener('click', () => {
-        if (!isPointerLocked && !inventoryOpen) {
+        if (!isPointerLocked && !inventoryOpen && gameStarted) {
             canvas.requestPointerLock().catch(err => console.log(err));
         }
     });
@@ -506,7 +595,6 @@ if (!isMobile) {
 
     document.addEventListener('mousemove', (e) => {
         if (!isPointerLocked) return;
-
         const deltaX = e.movementX;
         const deltaY = e.movementY;
 
@@ -522,6 +610,10 @@ if (!isMobile) {
     });
 }
 
+// ============================================================
+// РАЗРУШЕНИЕ / УСТАНОВКА
+// ============================================================
+
 const raycaster = new THREE.Raycaster();
 const screenCenter = new THREE.Vector2(0, 0);
 
@@ -533,22 +625,55 @@ function getTargetBlock() {
 }
 
 function breakBlock() {
-    if (inventoryOpen) return;
+    if (inventoryOpen || !gameStarted) return;
     const hit = getTargetBlock();
     if (!hit) return;
-    const block = hit.object;
+    const mesh = hit.object;
+    const blockId = mesh.userData.blockId;
 
-    const dx = Math.abs(block.position.x - player.x);
-    const dz = Math.abs(block.position.z - player.z);
-    if (dx < 0.6 && dz < 0.6 && block.position.y < 1) return;
+    const dx = Math.abs(mesh.position.x - player.x);
+    const dz = Math.abs(mesh.position.z - player.z);
+    if (dx < 0.6 && dz < 0.6 && mesh.position.y < 1) return;
 
-    removeBlock(block);
+    // Удаляем
+    const x = Math.round(mesh.position.x);
+    const y = Math.round(mesh.position.y);
+    const z = Math.round(mesh.position.z);
+
+    removeBlock(mesh);
+
+    // +1 в инвентарь
+    if (blockCounts[blockId] === undefined) blockCounts[blockId] = 0;
+    blockCounts[blockId]++;
+
+    // Разблокируем блок если новый
+    if (!unlockedBlocks.includes(blockId)) {
+        unlockedBlocks.push(blockId);
+    }
+
+    // Обновляем hotbar
+    initHotbar();
+
+    // Проверяем физику блоков вокруг
+    checkPhysics(x + 1, y, z);
+    checkPhysics(x - 1, y, z);
+    checkPhysics(x, y, z + 1);
+    checkPhysics(x, y, z - 1);
+    checkPhysics(x, y + 1, z);
 }
 
 function placeBlock() {
-    if (inventoryOpen) return;
+    if (inventoryOpen || !gameStarted) return;
     const hit = getTargetBlock();
     if (!hit) return;
+
+    const blockId = unlockedBlocks[selectedSlot];
+
+    // Проверка количества
+    if (blockCounts[blockId] !== undefined && blockCounts[blockId] <= 0) {
+        showNotification('❌ Нет блоков ' + ALL_BLOCKS[blockId].name);
+        return;
+    }
 
     const normal = hit.face.normal.clone();
     const newPos = hit.object.position.clone().add(normal);
@@ -562,8 +687,18 @@ function placeBlock() {
     if (dx < 0.6 && dz < 0.6 && dy > -0.5 && dy < 1.5) return;
     if (newPos.y < 0) return;
 
-    const blockId = unlockedBlocks[selectedSlot];
-    createBlock(newPos.x, newPos.y, newPos.z, ALL_BLOCKS[blockId].material);
+    createBlock(newPos.x, newPos.y, newPos.z, blockId);
+
+    // -1 из инвентаря
+    if (blockCounts[blockId] !== undefined) {
+        blockCounts[blockId]--;
+    }
+
+    initHotbar();
+
+    // Если поставили на песок сверху — ничего
+    // Если под новым блоком пусто — проверяем
+    checkPhysics(Math.round(newPos.x), Math.round(newPos.y), Math.round(newPos.z));
 }
 
 window.breakBlockBtn = breakBlock;
@@ -571,7 +706,7 @@ window.placeBlockBtn = placeBlock;
 
 if (!isMobile) {
     document.addEventListener('mousedown', (e) => {
-        if (inventoryOpen) return;
+        if (inventoryOpen || !gameStarted) return;
         if (e.button === 0) placeBlock();
         else if (e.button === 2) breakBlock();
     });
@@ -579,8 +714,7 @@ if (!isMobile) {
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
-let lastTouchX = 0;
-let lastTouchY = 0;
+let lastTouchX = 0, lastTouchY = 0;
 
 if (isMobile) {
     canvas.addEventListener('touchstart', (e) => {
@@ -592,7 +726,6 @@ if (isMobile) {
 
     canvas.addEventListener('touchmove', (e) => {
         if (e.touches.length !== 1) return;
-
         const deltaX = e.touches[0].clientX - lastTouchX;
         const deltaY = e.touches[0].clientY - lastTouchY;
         lastTouchX = e.touches[0].clientX;
@@ -608,8 +741,12 @@ if (isMobile) {
     }, { passive: true });
 }
 
+// ============================================================
+// ОБНОВЛЕНИЕ
+// ============================================================
+
 function update() {
-    if (!inventoryOpen) {
+    if (!inventoryOpen && gameStarted) {
         if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
         if (keys['d'] || keys['arrowright']) player.angle -= player.turnSpeed;
 
@@ -625,14 +762,10 @@ function update() {
         }
     }
 
+    // Физика игрока
     player.vy += GRAVITY;
     player.y += player.vy;
-
-    if (player.y <= 0) {
-        player.y = 0;
-        player.vy = 0;
-        player.isJumping = false;
-    }
+    if (player.y <= 0) { player.y = 0; player.vy = 0; player.isJumping = false; }
 
     const limit = WORLD_SIZE / 2 - 0.5;
     player.x = Math.max(-limit, Math.min(limit, player.x));
@@ -645,6 +778,7 @@ function update() {
     human.position.y = player.y + 0.5 + crouchOffset;
     human.rotation.y = player.angle;
 
+    // Камера
     if (cameraMode === 3) {
         if (keys['left']) cameraFollowAngle += 0.03;
         if (keys['right']) cameraFollowAngle -= 0.03;
@@ -676,7 +810,41 @@ function update() {
         human.visible = false;
     }
 
-    if (!inventoryOpen) {
+    // Физика падающих блоков
+    for (let i = fallingBlocks.length - 1; i >= 0; i--) {
+        const fb = fallingBlocks[i];
+        fb.vy += GRAVITY * 0.5;
+        fb.mesh.position.y += fb.vy;
+
+        const x = Math.round(fb.mesh.position.x);
+        const y = Math.round(fb.mesh.position.y);
+        const z = Math.round(fb.mesh.position.z);
+
+        // Проверяем, есть ли блок под ним
+        const under = blockMap.get(blockKey(x, y - 1, z));
+        const atLevel = blockMap.get(blockKey(x, y, z));
+
+        if (under || y <= 0 || atLevel) {
+            fb.mesh.position.y = Math.round(fb.mesh.position.y);
+            fb.mesh.position.x = Math.round(fb.mesh.position.x);
+            fb.mesh.position.z = Math.round(fb.mesh.position.z);
+
+            blockMap.set(blockKey(fb.mesh.position.x, fb.mesh.position.y, fb.mesh.position.z), fb.mesh);
+            fallingBlocks.splice(i, 1);
+
+            // Проверяем блок ВЫШЕ (может он тоже упадёт)
+            const above = blockMap.get(blockKey(x, y + 1, z));
+            if (above) {
+                const aboveId = above.userData.blockId;
+                if (ALL_BLOCKS[aboveId].physics) {
+                    startFalling(x, y + 1, z);
+                }
+            }
+        }
+    }
+
+    // Подсветка
+    if (!inventoryOpen && gameStarted) {
         const hit = getTargetBlock();
         if (hit) {
             highlightBox.position.copy(hit.object.position);
@@ -711,11 +879,14 @@ if (!isMobile) {
     mobileOnly.forEach(el => el.style.display = 'none');
 }
 
+// ============================================================
+// ИКОНКИ
+// ============================================================
+
 function makeInvIcon(color, secondaryColor) {
     const size = 64;
     const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
+    c.width = size; c.height = size;
     const ctx = c.getContext('2d');
 
     const gradient = ctx.createLinearGradient(0, 0, 0, size);
@@ -749,13 +920,15 @@ function getIcon(blockId) {
     return ICON_CACHE[blockId];
 }
 
+// ============================================================
+// ПРЕВЬЮ
+// ============================================================
+
 function drawPlayerPreview() {
     const c = document.getElementById('player-preview');
     if (!c) return;
-
     const ctx = c.getContext('2d');
-    const W = c.width;
-    const H = c.height;
+    const W = c.width, H = c.height;
 
     const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
     skyGrad.addColorStop(0, '#87CEEB');
@@ -774,8 +947,7 @@ function drawPlayerPreview() {
     ctx.fillStyle = '#8B6535';
     ctx.fillRect(0, H - 10, W, 10);
 
-    const cx = W / 2;
-    const cy = H - 22;
+    const cx = W / 2, cy = H - 22;
 
     ctx.fillStyle = '#333366';
     ctx.fillRect(cx - 11, cy - 20, 9, 20);
@@ -807,6 +979,10 @@ function drawPlayerPreview() {
     ctx.fillRect(cx - 11, cy - 66, 3, 12);
     ctx.fillRect(cx + 8, cy - 66, 3, 12);
 }
+
+// ============================================================
+// КРАФТ
+// ============================================================
 
 const RECIPES = [
     { inputs: { 2: 1 }, output: 5, name: 'Доски' },
@@ -862,7 +1038,6 @@ function checkRecipe() {
     const resultEl = document.getElementById('crafting-result');
     const resultImg = document.getElementById('crafting-result-img');
     const resultName = document.getElementById('crafting-result-name');
-
     if (!resultEl) return;
 
     const counts = {};
@@ -878,20 +1053,13 @@ function checkRecipe() {
         const needed = recipe.inputs;
         const neededKeys = Object.keys(needed).map(Number);
         const haveKeys = Object.keys(counts).map(Number);
-
         if (haveKeys.length !== neededKeys.length) continue;
 
         let ok = true;
         for (const k of neededKeys) {
-            if (counts[k] !== needed[k]) {
-                ok = false;
-                break;
-            }
+            if (counts[k] !== needed[k]) { ok = false; break; }
         }
-        if (ok) {
-            matched = recipe;
-            break;
-        }
+        if (ok) { matched = recipe; break; }
     }
 
     if (matched) {
@@ -924,23 +1092,36 @@ function craftItem() {
         const needed = recipe.inputs;
         const neededKeys = Object.keys(needed).map(Number);
         const haveKeys = Object.keys(counts).map(Number);
-
         if (haveKeys.length !== neededKeys.length) continue;
 
         let ok = true;
         for (const k of neededKeys) {
-            if (counts[k] !== needed[k]) {
-                ok = false;
-                break;
-            }
+            if (counts[k] !== needed[k]) { ok = false; break; }
         }
-        if (ok) {
-            matched = recipe;
-            break;
-        }
+        if (ok) { matched = recipe; break; }
     }
 
     if (!matched) return;
+
+    // Проверяем наличие ингредиентов
+    for (const k of Object.keys(matched.inputs)) {
+        const blockId = Number(k);
+        const needed = matched.inputs[blockId];
+        if ((blockCounts[blockId] || 0) < needed) {
+            showNotification('❌ Не хватает: ' + ALL_BLOCKS[blockId].name);
+            return;
+        }
+    }
+
+    // Списываем ингредиенты
+    for (const k of Object.keys(matched.inputs)) {
+        const blockId = Number(k);
+        blockCounts[blockId] -= matched.inputs[blockId];
+    }
+
+    // Добавляем результат
+    if (blockCounts[matched.output] === undefined) blockCounts[matched.output] = 0;
+    blockCounts[matched.output]++;
 
     if (!unlockedBlocks.includes(matched.output)) {
         unlockedBlocks.push(matched.output);
@@ -951,12 +1132,7 @@ function craftItem() {
     initHotbar();
     checkRecipe();
 
-    const notif = document.getElementById('craft-notification');
-    if (notif) {
-        notif.textContent = `✅ Создано: ${matched.name}`;
-        notif.classList.add('show');
-        setTimeout(() => notif.classList.remove('show'), 2000);
-    }
+    showNotification('✅ Создано: ' + matched.name);
 }
 window.craftItem = craftItem;
 
@@ -967,6 +1143,18 @@ function resetCrafting() {
 }
 window.resetCrafting = resetCrafting;
 
+function showNotification(text) {
+    const notif = document.getElementById('craft-notification');
+    if (!notif) return;
+    notif.textContent = text;
+    notif.classList.add('show');
+    setTimeout(() => notif.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ
+// ============================================================
+
 function initHotbar() {
     const invBar = document.getElementById('inventory-bar');
     if (!invBar) return;
@@ -974,10 +1162,13 @@ function initHotbar() {
 
     unlockedBlocks.forEach((blockId, index) => {
         const block = ALL_BLOCKS[blockId];
+        const count = blockCounts[blockId] || 0;
+
         const slot = document.createElement('div');
         slot.className = 'inv-slot';
         slot.setAttribute('data-hotbar', 'true');
         if (index === selectedSlot) slot.classList.add('active');
+        if (count <= 0) slot.classList.add('empty');
 
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
@@ -988,6 +1179,12 @@ function initHotbar() {
         num.className = 'inv-num';
         num.textContent = (index + 1);
         slot.appendChild(num);
+
+        const cnt = document.createElement('span');
+        cnt.className = 'inv-count';
+        if (count >= 999) { cnt.textContent = '∞'; cnt.classList.add('inf'); }
+        else cnt.textContent = count;
+        slot.appendChild(cnt);
 
         slot.onclick = () => selectSlot(index);
         invBar.appendChild(slot);
@@ -1001,24 +1198,29 @@ function initInventoryModal() {
 
     unlockedBlocks.forEach((blockId, index) => {
         const block = ALL_BLOCKS[blockId];
+        const count = blockCounts[blockId] || 0;
+
         const slot = document.createElement('div');
         slot.className = 'inv-modal-slot';
         if (index === selectedSlot) slot.classList.add('active');
+        if (count <= 0) slot.classList.add('empty');
 
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
         img.src = getIcon(blockId);
         slot.appendChild(img);
 
-        slot.title = block.name;
+        const cnt = document.createElement('span');
+        cnt.className = 'inv-count';
+        if (count >= 999) { cnt.textContent = '∞'; cnt.classList.add('inf'); }
+        else cnt.textContent = count;
+        slot.appendChild(cnt);
 
+        slot.title = block.name;
         slot.onclick = () => addToCraftingGrid(blockId);
         modal.appendChild(slot);
     });
 }
-
-initHotbar();
-initInventoryModal();
 
 const yBtn = document.createElement('button');
 yBtn.id = 'inventory-toggle-btn';
@@ -1050,4 +1252,12 @@ if (craftBtn) craftBtn.onclick = craftItem;
 const resetBtn = document.getElementById('craft-reset-btn');
 if (resetBtn) resetBtn.onclick = resetCrafting;
 
-selectSlot(0);
+// Проверяем сохранённый режим
+const savedMode = localStorage.getItem('cubeLifeMode');
+if (savedMode) {
+    // Автоматически стартуем, если режим сохранён
+    startGame(savedMode);
+} else {
+    // Показываем меню
+    document.getElementById('start-menu').classList.remove('hidden');
+}
