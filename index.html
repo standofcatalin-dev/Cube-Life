@@ -51,4 +51,27 @@
         <div id="controls" class="mobile-only">
             <div class="controls-left">
                 <button class="ctrl-btn"
-                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')">
+                        ontouchstart="pressKey('a')" ontouchend="releaseKey('a')">◀</button>
+                <button class="ctrl-btn"
+                        ontouchstart="pressKey('d')" ontouchend="releaseKey('d')">▶</button>
+            </div>
+            <div class="controls-right">
+                <button class="ctrl-btn"
+                        ontouchstart="pressKey('s')" ontouchend="releaseKey('s')">▼</button>
+                <button class="ctrl-btn gas"
+                        ontouchstart="pressKey('w')" ontouchend="releaseKey('w')">▲</button>
+            </div>
+        </div>
+
+        <div id="action-buttons" class="mobile-only">
+            <button id="break-btn" onclick="breakBlockBtn()">⛏️</button>
+            <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
+        </div>
+
+        <div id="hint">1-5 или колесо — выбор блока • ЛКМ поставить • ПКМ сломать</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
