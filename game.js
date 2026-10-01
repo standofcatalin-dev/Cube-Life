@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 15: Меню паузы (ESC)
+// CUBE LIFE — Этап 16: Улучшенный НПС + Анимация + Графика
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -10,17 +10,39 @@ const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB);
-scene.fog = new THREE.Fog(0x87CEEB, 30, 80);
+scene.fog = new THREE.Fog(0x87CEEB, 40, 100);
 
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 500);
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(1);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
-sunLight.position.set(50, 100, 30);
+// Улучшенное освещение
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambientLight);
+
+const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x5AAD3A, 0.4);
+scene.add(hemiLight);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 0.9);
+sunLight.position.set(30, 60, 20);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 1024;
+sunLight.shadow.mapSize.height = 1024;
+sunLight.shadow.camera.left = -30;
+sunLight.shadow.camera.right = 30;
+sunLight.shadow.camera.top = 30;
+sunLight.shadow.camera.bottom = -30;
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 100;
+sunLight.shadow.bias = -0.0005;
 scene.add(sunLight);
+
+// ============================================================
+// ХЕЛПЕРЫ
+// ============================================================
 
 function lightenColor(hex, percent) {
     const num = parseInt(hex.replace('#', ''), 16);
@@ -177,6 +199,8 @@ function createBlock(x, y, z, blockId) {
     mesh.position.set(x, y, z);
     mesh.userData.isBlock = true;
     mesh.userData.blockId = blockId;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     scene.add(mesh);
     blockMap.set(blockKey(x, y, z), mesh);
     return mesh;
@@ -279,83 +303,179 @@ const highlightBox = new THREE.Mesh(
 highlightBox.visible = false;
 scene.add(highlightBox);
 
-function createHuman() {
-    const human = new THREE.Group();
+// ============================================================
+// ЧЕЛОВЕЧЕК — РАЗДЕЛЬНЫЕ ЧАСТИ ДЛЯ АНИМАЦИИ
+// ============================================================
 
+const human = new THREE.Group();
+const humanParts = {
+    head: null,
+    body: null,
+    leftArm: null,
+    rightArm: null,
+    leftLeg: null,
+    rightLeg: null
+};
+
+function buildHuman() {
     const skinMat = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
     const shirtMat = new THREE.MeshLambertMaterial({ color: 0x3366cc });
     const pantsMat = new THREE.MeshLambertMaterial({ color: 0x333366 });
     const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
     const hairMat = new THREE.MeshLambertMaterial({ color: 0x4a2c0a });
 
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
-    head.position.y = 1.75;
-    human.add(head);
+    // === ТЕЛО ===
+    const bodyGroup = new THREE.Group();
+    bodyGroup.position.y = 1.15;
 
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const eyeGeom = new THREE.BoxGeometry(0.1, 0.1, 0.05);
+    const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.7, 0.3), shirtMat);
+    bodyMesh.castShadow = true;
+    bodyGroup.add(bodyMesh);
 
-    const eyeLeft = new THREE.Mesh(eyeGeom, eyeMat);
-    eyeLeft.position.set(-0.12, 1.8, 0.26);
-    human.add(eyeLeft);
+    // Рубашка — полоски снизу
+    const shirtStripe = new THREE.Mesh(
+        new THREE.BoxGeometry(0.56, 0.1, 0.31),
+        new THREE.MeshLambertMaterial({ color: 0x2244aa })
+    );
+    shirtStripe.position.y = -0.3;
+    bodyGroup.add(shirtStripe);
 
-    const eyeRight = new THREE.Mesh(eyeGeom, eyeMat);
-    eyeRight.position.set(0.12, 1.8, 0.26);
-    human.add(eyeRight);
+    human.add(bodyGroup);
+    humanParts.body = bodyGroup;
 
-    const hair = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.52), hairMat);
-    hair.position.y = 1.98;
-    human.add(hair);
+    // === ГОЛОВА ===
+    const headGroup = new THREE.Group();
+    headGroup.position.y = 1.75;
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.7, 0.3), shirtMat);
-    body.position.y = 1.15;
-    human.add(body);
+    const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
+    headMesh.castShadow = true;
+    headGroup.add(headMesh);
 
-    const armGeom = new THREE.BoxGeometry(0.2, 0.65, 0.2);
+    // Волосы
+    const hairTop = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.52), hairMat);
+    hairTop.position.y = 0.25;
+    headGroup.add(hairTop);
 
-    const armLeft = new THREE.Mesh(armGeom, shirtMat);
-    armLeft.position.set(-0.4, 1.15, 0);
-    human.add(armLeft);
+    const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.4, 0.08), hairMat);
+    hairBack.position.set(0, 0.05, -0.25);
+    headGroup.add(hairBack);
 
-    const handGeom = new THREE.BoxGeometry(0.2, 0.15, 0.2);
-    const handLeft = new THREE.Mesh(handGeom, skinMat);
-    handLeft.position.set(-0.4, 0.75, 0);
-    human.add(handLeft);
+    const hairLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.52), hairMat);
+    hairLeft.position.set(-0.25, 0.05, 0);
+    headGroup.add(hairLeft);
 
-    const armRight = new THREE.Mesh(armGeom, shirtMat);
-    armRight.position.set(0.4, 1.15, 0);
-    human.add(armRight);
+    const hairRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.52), hairMat);
+    hairRight.position.set(0.25, 0.05, 0);
+    headGroup.add(hairRight);
 
-    const handRight = new THREE.Mesh(handGeom, skinMat);
-    handRight.position.set(0.4, 0.75, 0);
-    human.add(handRight);
+    // Глаза (более детальные)
+    const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const eyeIrisMat = new THREE.MeshBasicMaterial({ color: 0x3366cc });
+    const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
-    const legGeom = new THREE.BoxGeometry(0.22, 0.6, 0.22);
+    const eyeWhiteGeom = new THREE.BoxGeometry(0.14, 0.14, 0.02);
+    const eyePupilGeom = new THREE.BoxGeometry(0.08, 0.08, 0.03);
 
-    const legLeft = new THREE.Mesh(legGeom, pantsMat);
-    legLeft.position.set(-0.15, 0.5, 0);
-    human.add(legLeft);
+    const eyeLeftWhite = new THREE.Mesh(eyeWhiteGeom, eyeWhiteMat);
+    eyeLeftWhite.position.set(-0.12, 0.05, 0.26);
+    headGroup.add(eyeLeftWhite);
 
-    const legRight = new THREE.Mesh(legGeom, pantsMat);
-    legRight.position.set(0.15, 0.5, 0);
-    human.add(legRight);
+    const eyeRightWhite = new THREE.Mesh(eyeWhiteGeom, eyeWhiteMat);
+    eyeRightWhite.position.set(0.12, 0.05, 0.26);
+    headGroup.add(eyeRightWhite);
 
-    const shoeGeom = new THREE.BoxGeometry(0.24, 0.12, 0.28);
+    const eyeLeftPupil = new THREE.Mesh(eyePupilGeom, eyePupilMat);
+    eyeLeftPupil.position.set(-0.12, 0.05, 0.27);
+    headGroup.add(eyeLeftPupil);
 
-    const shoeLeft = new THREE.Mesh(shoeGeom, shoeMat);
-    shoeLeft.position.set(-0.15, 0.14, 0.02);
-    human.add(shoeLeft);
+    const eyeRightPupil = new THREE.Mesh(eyePupilGeom, eyePupilMat);
+    eyeRightPupil.position.set(0.12, 0.05, 0.27);
+    headGroup.add(eyeRightPupil);
 
-    const shoeRight = new THREE.Mesh(shoeGeom, shoeMat);
-    shoeRight.position.set(0.15, 0.14, 0.02);
-    human.add(shoeRight);
+    // Рот
+    const mouth = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, 0.02, 0.02),
+        new THREE.MeshBasicMaterial({ color: 0xcc6666 })
+    );
+    mouth.position.set(0, -0.15, 0.26);
+    headGroup.add(mouth);
 
-    return human;
+    human.add(headGroup);
+    humanParts.head = headGroup;
+
+    // === ЛЕВАЯ РУКА ===
+    const leftArmGroup = new THREE.Group();
+    leftArmGroup.position.set(-0.4, 1.5, 0); // Верхняя точка — точка вращения
+
+    const leftArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.65, 0.2), shirtMat);
+    leftArmMesh.position.y = -0.32;
+    leftArmMesh.castShadow = true;
+    leftArmGroup.add(leftArmMesh);
+
+    const leftHand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.2), skinMat);
+    leftHand.position.y = -0.72;
+    leftArmGroup.add(leftHand);
+
+    human.add(leftArmGroup);
+    humanParts.leftArm = leftArmGroup;
+
+    // === ПРАВАЯ РУКА ===
+    const rightArmGroup = new THREE.Group();
+    rightArmGroup.position.set(0.4, 1.5, 0);
+
+    const rightArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.65, 0.2), shirtMat);
+    rightArmMesh.position.y = -0.32;
+    rightArmMesh.castShadow = true;
+    rightArmGroup.add(rightArmMesh);
+
+    const rightHand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.2), skinMat);
+    rightHand.position.y = -0.72;
+    rightArmGroup.add(rightHand);
+
+    human.add(rightArmGroup);
+    humanParts.rightArm = rightArmGroup;
+
+    // === ЛЕВАЯ НОГА ===
+    const leftLegGroup = new THREE.Group();
+    leftLegGroup.position.set(-0.15, 0.8, 0);
+
+    const leftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.6, 0.22), pantsMat);
+    leftLegMesh.position.y = -0.3;
+    leftLegMesh.castShadow = true;
+    leftLegGroup.add(leftLegMesh);
+
+    const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.28), shoeMat);
+    leftShoe.position.set(0, -0.65, 0.02);
+    leftLegGroup.add(leftShoe);
+
+    human.add(leftLegGroup);
+    humanParts.leftLeg = leftLegGroup;
+
+    // === ПРАВАЯ НОГА ===
+    const rightLegGroup = new THREE.Group();
+    rightLegGroup.position.set(0.15, 0.8, 0);
+
+    const rightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.6, 0.22), pantsMat);
+    rightLegMesh.position.y = -0.3;
+    rightLegMesh.castShadow = true;
+    rightLegGroup.add(rightLegMesh);
+
+    const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.28), shoeMat);
+    rightShoe.position.set(0, -0.65, 0.02);
+    rightLegGroup.add(rightShoe);
+
+    human.add(rightLegGroup);
+    humanParts.rightLeg = rightLegGroup;
+
+    human.position.set(0, 0, 0);
+    scene.add(human);
 }
 
-const human = createHuman();
-human.position.set(0, 0, 0);
-scene.add(human);
+buildHuman();
+
+// ============================================================
+// МЕНЮ — РИСУЕМ ЧЕЛОВЕЧКА
+// ============================================================
 
 function drawMenuPlayer() {
     const c = document.getElementById('menu-player-canvas');
@@ -401,9 +521,13 @@ function drawMenuPlayer() {
     ctx.fillRect(cx + 24, cy - 44, 12, 12);
     ctx.fillRect(cx - 20, cy - 140, 40, 40);
 
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cx - 14, cy - 128, 8, 8);
+    ctx.fillRect(cx + 6, cy - 128, 8, 8);
+
     ctx.fillStyle = '#000000';
-    ctx.fillRect(cx - 12, cy - 124, 6, 6);
-    ctx.fillRect(cx + 6, cy - 124, 6, 6);
+    ctx.fillRect(cx - 12, cy - 126, 4, 4);
+    ctx.fillRect(cx + 8, cy - 126, 4, 4);
 
     ctx.fillStyle = '#cc6666';
     ctx.fillRect(cx - 8, cy - 108, 16, 4);
@@ -415,6 +539,10 @@ function drawMenuPlayer() {
 }
 
 drawMenuPlayer();
+
+// ============================================================
+// СТАРТ ИГРЫ
+// ============================================================
 
 function startGame(mode) {
     gameStarted = true;
@@ -455,11 +583,9 @@ window.startGame = startGame;
 function openPause() {
     if (!gameStarted) return;
     if (inventoryOpen) return;
-
     pauseOpen = true;
     const el = document.getElementById('pause-menu');
     if (el) el.classList.add('open');
-
     if (isPointerLocked) document.exitPointerLock();
 }
 window.openPause = openPause;
@@ -495,6 +621,10 @@ function exitToMenu() {
 }
 window.exitToMenu = exitToMenu;
 
+// ============================================================
+// УПРАВЛЕНИЕ
+// ============================================================
+
 const keys = {};
 const player = { x: 0, z: 0, y: 0, vy: 0, angle: 0, speed: 0.08, turnSpeed: 0.05, isJumping: false, isCrouching: false };
 const GRAVITY = -0.015;
@@ -504,6 +634,10 @@ let cameraMode = 3;
 let cameraFollowAngle = 0;
 let cameraPitchAngle = 0;
 
+// Анимация ходьбы
+let walkAnimation = 0;
+let isWalking = false;
+
 const KEY_MAP = { 'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v', 'н': 'y' };
 
 document.addEventListener('keydown', (e) => {
@@ -511,18 +645,9 @@ document.addEventListener('keydown', (e) => {
     const normalizedKey = KEY_MAP[key] || key;
 
     if (key === 'escape') {
-        if (inventoryOpen) {
-            toggleInventory();
-            return;
-        }
-        if (pauseOpen) {
-            closePause();
-            return;
-        }
-        if (gameStarted) {
-            openPause();
-            return;
-        }
+        if (inventoryOpen) { toggleInventory(); return; }
+        if (pauseOpen) { closePause(); return; }
+        if (gameStarted) { openPause(); return; }
     }
 
     if (!gameStarted) return;
@@ -570,7 +695,6 @@ window.toggleCamera = toggleCamera;
 
 function toggleInventory() {
     if (pauseOpen) return;
-
     inventoryOpen = !inventoryOpen;
     const modal = document.getElementById('inventory-modal');
     if (!modal) return;
@@ -766,6 +890,61 @@ if (isMobile) {
     }, { passive: true });
 }
 
+// ============================================================
+// АНИМАЦИЯ ХОДЬБЫ
+// ============================================================
+
+function updateWalkAnimation() {
+    const moving = (keys['w'] || keys['s'] || keys['arrowup'] || keys['arrowdown']) && gameStarted && !pauseOpen && !inventoryOpen;
+
+    if (moving) {
+        isWalking = true;
+        const speedMultiplier = player.isCrouching ? 0.5 : 1;
+        walkAnimation += 0.15 * speedMultiplier;
+    } else {
+        isWalking = false;
+    }
+
+    // Плавное затухание
+    const swing = isWalking ? Math.sin(walkAnimation) * 0.7 : 0;
+    const targetSwing = isWalking ? swing : 0;
+
+    // Применяем плавно (интерполяция)
+    if (humanParts.leftArm) {
+        humanParts.leftArm.rotation.x += (targetSwing - humanParts.leftArm.rotation.x) * 0.3;
+    }
+    if (humanParts.rightArm) {
+        humanParts.rightArm.rotation.x += (-targetSwing - humanParts.rightArm.rotation.x) * 0.3;
+    }
+    if (humanParts.leftLeg) {
+        humanParts.leftLeg.rotation.x += (-targetSwing * 0.8 - humanParts.leftLeg.rotation.x) * 0.3;
+    }
+    if (humanParts.rightLeg) {
+        humanParts.rightLeg.rotation.x += (targetSwing * 0.8 - humanParts.rightLeg.rotation.x) * 0.3;
+    }
+
+    // Покачивание тела
+    if (humanParts.body) {
+        const bob = isWalking ? Math.abs(Math.sin(walkAnimation * 2)) * 0.05 : 0;
+        humanParts.body.position.y = 1.15 + bob;
+    }
+    if (humanParts.head) {
+        const headBob = isWalking ? Math.abs(Math.sin(walkAnimation * 2)) * 0.03 : 0;
+        humanParts.head.position.y = 1.75 + headBob;
+    }
+
+    // Присед — наклон головы вперёд
+    if (player.isCrouching && humanParts.head) {
+        humanParts.head.rotation.x = 0.3;
+    } else if (humanParts.head) {
+        humanParts.head.rotation.x += (0 - humanParts.head.rotation.x) * 0.2;
+    }
+}
+
+// ============================================================
+// ОБНОВЛЕНИЕ
+// ============================================================
+
 function update() {
     if (!inventoryOpen && !pauseOpen && gameStarted) {
         if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
@@ -798,6 +977,10 @@ function update() {
     human.position.y = player.y + 0.5 + crouchOffset;
     human.rotation.y = player.angle;
 
+    // Анимация ходьбы
+    updateWalkAnimation();
+
+    // Камера
     if (cameraMode === 3) {
         if (keys['left']) cameraFollowAngle += 0.03;
         if (keys['right']) cameraFollowAngle -= 0.03;
@@ -894,6 +1077,10 @@ if (!isMobile) {
     mobileOnly.forEach(el => el.style.display = 'none');
 }
 
+// ============================================================
+// ИКОНКИ
+// ============================================================
+
 function makeInvIcon(color, secondaryColor) {
     const size = 64;
     const c = document.createElement('canvas');
@@ -974,9 +1161,13 @@ function drawPlayerPreview() {
     ctx.fillRect(cx + 12, cy - 22, 6, 6);
     ctx.fillRect(cx - 10, cy - 70, 20, 20);
 
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cx - 7, cy - 64, 5, 5);
+    ctx.fillRect(cx + 2, cy - 64, 5, 5);
+
     ctx.fillStyle = '#000000';
-    ctx.fillRect(cx - 6, cy - 62, 3, 3);
-    ctx.fillRect(cx + 3, cy - 62, 3, 3);
+    ctx.fillRect(cx - 6, cy - 63, 3, 3);
+    ctx.fillRect(cx + 3, cy - 63, 3, 3);
 
     ctx.fillStyle = '#cc6666';
     ctx.fillRect(cx - 4, cy - 54, 8, 2);
