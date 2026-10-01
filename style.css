@@ -30,7 +30,6 @@ html, body {
     height: 100%;
 }
 
-/* ===== HUD ===== */
 #hud {
     position: absolute;
     top: 16px;
@@ -68,7 +67,6 @@ html, body {
     border: 2px solid #ffffff50;
 }
 
-/* ===== КНОПКА КАМЕРЫ ===== */
 #camera-btn {
     position: absolute;
     top: 90px;
@@ -92,7 +90,6 @@ html, body {
     transform: scale(0.9);
 }
 
-/* ===== ИНФО О БЛОКЕ ===== */
 #selected-block-info {
     position: absolute;
     bottom: 95px;
@@ -113,7 +110,7 @@ html, body {
     font-weight: bold;
 }
 
-/* ===== HOTBAR ===== */
+/* HOTBAR */
 #inventory-bar {
     position: absolute;
     bottom: 20px;
@@ -176,7 +173,9 @@ html, body {
     pointer-events: none;
 }
 
-/* ===== БОЛЬШОЙ ИНВЕНТАРЬ ===== */
+/* ============================================================
+   БОЛЬШОЙ ИНВЕНТАРЬ — БЕЗ BLUR!
+   ============================================================ */
 #inventory-modal {
     position: fixed;
     inset: 0;
@@ -193,12 +192,14 @@ html, body {
 }
 
 .inv-modal-content {
-    background: rgba(30, 30, 30, 0.95);
+    background: #1e1e1e;
     border: 3px solid #5a5a5a;
     border-radius: 12px;
-    padding: 24px;
-    max-width: 500px;
+    padding: 20px;
+    max-width: 520px;
     width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
 
@@ -206,7 +207,7 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     border-bottom: 2px solid #5a5a5a;
     padding-bottom: 12px;
 }
@@ -234,11 +235,58 @@ html, body {
     background: rgba(255, 68, 68, 0.3);
 }
 
+/* ПРЕВЬЮ ИГРОКА */
+.inv-player-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid #3a3a3a;
+    border-radius: 10px;
+    margin-bottom: 16px;
+}
+
+#player-preview {
+    width: 80px;
+    height: 120px;
+    image-rendering: pixelated;
+    border-radius: 6px;
+    flex-shrink: 0;
+    border: 2px solid #3a3a3a;
+}
+
+.inv-player-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.inv-stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+}
+
+.inv-stat-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.inv-stat-value {
+    color: #ffc800;
+    font-weight: bold;
+}
+
+/* СЕТКА БЛОКОВ */
 .inv-modal-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
 .inv-modal-slot {
@@ -252,30 +300,29 @@ html, body {
     justify-content: center;
     cursor: pointer;
     position: relative;
-    transition: all 0.2s;
-    padding: 8px;
+    transition: all 0.15s;
+    padding: 6px;
 }
 
 .inv-modal-slot:hover {
     background: rgba(160, 160, 160, 0.5);
     border-color: #8a8a8a;
-    transform: scale(1.03);
 }
 
 .inv-modal-slot.active {
     border: 3px solid #ffc800;
     background: rgba(255, 200, 0, 0.2);
-    box-shadow: 0 0 20px rgba(255, 200, 0, 0.6);
+    box-shadow: 0 0 15px rgba(255, 200, 0, 0.6);
 }
 
 .inv-modal-slot .inv-icon-img {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 6px;
+    width: 55px;
+    height: 55px;
+    margin-bottom: 4px;
 }
 
 .inv-modal-name {
-    font-size: 12px;
+    font-size: 11px;
     color: #ffffff;
     text-align: center;
     font-weight: bold;
@@ -285,10 +332,9 @@ html, body {
     text-align: center;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.6);
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
-/* ===== КНОПКА 🎒 ===== */
 #inventory-toggle-btn {
     position: absolute;
     top: 90px;
@@ -312,7 +358,6 @@ html, body {
     transform: scale(0.9);
 }
 
-/* ===== УПРАВЛЕНИЕ ===== */
 #controls {
     position: absolute;
     bottom: 100px;
@@ -355,7 +400,6 @@ html, body {
     background: rgba(126, 255, 126, 0.2);
 }
 
-/* ===== КНОПКИ ДЕЙСТВИЙ ===== */
 #action-buttons {
     position: absolute;
     bottom: 90px;
@@ -380,25 +424,12 @@ html, body {
     align-items: center;
     justify-content: center;
     pointer-events: auto;
-    transition: transform 0.1s;
 }
 
-#break-btn {
-    border-color: #ff4444;
-    color: #ff4444;
-}
+#break-btn { border-color: #ff4444; color: #ff4444; }
+#place-btn { border-color: #44ff44; color: #44ff44; }
+#break-btn:active, #place-btn:active { transform: scale(0.9); }
 
-#place-btn {
-    border-color: #44ff44;
-    color: #44ff44;
-}
-
-#break-btn:active,
-#place-btn:active {
-    transform: scale(0.9);
-}
-
-/* ===== ПОДСКАЗКА ===== */
 #hint {
     position: absolute;
     bottom: 5px;
