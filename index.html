@@ -22,26 +22,11 @@
         <button id="camera-btn" onclick="toggleCamera()">📷</button>
 
         <div id="inventory-bar">
-            <div class="inv-slot active" onclick="selectSlot(0)">
-                <span class="inv-icon">🟩</span>
-                <span class="inv-label">Трава</span>
-            </div>
-            <div class="inv-slot" onclick="selectSlot(1)">
-                <span class="inv-icon">⬜</span>
-                <span class="inv-label">Камень</span>
-            </div>
-            <div class="inv-slot" onclick="selectSlot(2)">
-                <span class="inv-icon">🟫</span>
-                <span class="inv-label">Дерево</span>
-            </div>
-            <div class="inv-slot" onclick="selectSlot(3)">
-                <span class="inv-icon">🌿</span>
-                <span class="inv-label">Листва</span>
-            </div>
-            <div class="inv-slot" onclick="selectSlot(4)">
-                <span class="inv-icon">🟤</span>
-                <span class="inv-label">Земля</span>
-            </div>
+            <div class="inv-slot active" onclick="selectSlot(0)">🟩</div>
+            <div class="inv-slot" onclick="selectSlot(1)">⬜</div>
+            <div class="inv-slot" onclick="selectSlot(2)">🟫</div>
+            <div class="inv-slot" onclick="selectSlot(3)">🌿</div>
+            <div class="inv-slot" onclick="selectSlot(4)">🟤</div>
         </div>
 
         <div id="selected-block-info">
@@ -68,7 +53,7 @@
             <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
         </div>
 
-        <div id="hint">1-5 или колесо — выбор блока • ЛКМ поставить • ПКМ сломать</div>
+        <div id="hint">1-5 — выбор блока • ЛКМ поставить • ПКМ сломать</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
