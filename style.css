@@ -30,9 +30,7 @@ html, body {
     height: 100%;
 }
 
-/* ============================================================
-   МЕНЮ СТАРТА
-   ============================================================ */
+/* ===== МЕНЮ СТАРТА ===== */
 #start-menu {
     position: fixed;
     inset: 0;
@@ -44,9 +42,7 @@ html, body {
     padding: 20px;
 }
 
-#start-menu.hidden {
-    display: none;
-}
+#start-menu.hidden { display: none; }
 
 .menu-content {
     background: rgba(20, 20, 30, 0.9);
@@ -102,9 +98,7 @@ html, body {
     transition: all 0.15s;
 }
 
-.menu-btn:active {
-    transform: scale(0.97);
-}
+.menu-btn:active { transform: scale(0.97); }
 
 .menu-btn.game {
     border-color: #7eff7e;
@@ -132,9 +126,7 @@ html, body {
     margin-top: 3px;
 }
 
-/* ============================================================
-   МЕНЮ ПАУЗЫ
-   ============================================================ */
+/* ===== МЕНЮ ПАУЗЫ ===== */
 #pause-menu {
     position: fixed;
     inset: 0;
@@ -146,9 +138,7 @@ html, body {
     padding: 20px;
 }
 
-#pause-menu.open {
-    display: flex;
-}
+#pause-menu.open { display: flex; }
 
 .pause-content {
     background: rgba(20, 20, 30, 0.95);
@@ -187,9 +177,7 @@ html, body {
     transition: all 0.15s;
 }
 
-.pause-btn:active {
-    transform: scale(0.97);
-}
+.pause-btn:active { transform: scale(0.97); }
 
 .pause-btn.resume {
     border-color: #7eff7e;
@@ -323,9 +311,7 @@ html, body {
     z-index: 5;
 }
 
-.inv-slot.empty {
-    opacity: 0.4;
-}
+.inv-slot.empty { opacity: 0.4; }
 
 .inv-icon-img {
     width: 42px;
@@ -357,9 +343,7 @@ html, body {
     pointer-events: none;
 }
 
-.inv-count.inf {
-    color: #ffc800;
-}
+.inv-count.inf { color: #ffc800; }
 
 #inventory-modal {
     position: fixed;
@@ -372,9 +356,7 @@ html, body {
     padding: 12px;
 }
 
-#inventory-modal.open {
-    display: flex;
-}
+#inventory-modal.open { display: flex; }
 
 .inv-modal-content {
     background: #1e1e1e;
@@ -396,9 +378,7 @@ html, body {
     padding-bottom: 10px;
 }
 
-.inv-modal-header h2 {
-    font-size: 17px;
-}
+.inv-modal-header h2 { font-size: 17px; }
 
 .inv-modal-close {
     width: 34px;
@@ -542,10 +522,7 @@ html, body {
     text-align: center;
 }
 
-.craft-actions {
-    display: flex;
-    gap: 8px;
-}
+.craft-actions { display: flex; gap: 8px; }
 
 .craft-action-btn {
     flex: 1;
@@ -586,9 +563,7 @@ html, body {
     position: relative;
 }
 
-.inv-modal-slot.active {
-    border: 3px solid #ffc800;
-}
+.inv-modal-slot.active { border: 3px solid #ffc800; }
 
 .inv-modal-slot .inv-icon-img {
     width: 38px;
