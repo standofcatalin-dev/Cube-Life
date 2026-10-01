@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 10: Крафт
+// CUBE LIFE — Этап 11: Инвентарь + Крафт в одном окне
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -11,7 +11,6 @@ if (tg) {
 const canvas = document.getElementById('game-canvas');
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
-// ============ СЦЕНА ============
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB);
 scene.fog = new THREE.Fog(0x87CEEB, 30, 80);
@@ -118,7 +117,6 @@ function createPlankTexture() {
     ctx.fillStyle = '#A0703A';
     ctx.fillRect(0, 0, size, size);
 
-    // Горизонтальные доски
     for (let y = 0; y < size; y += 16) {
         ctx.fillStyle = '#5A3A1F';
         ctx.fillRect(0, y, size, 2);
@@ -131,10 +129,6 @@ function createPlankTexture() {
     tex.minFilter = THREE.NearestFilter;
     return tex;
 }
-
-// ============================================================
-// МАТЕРИАЛЫ БЛОКОВ
-// ============================================================
 
 function createGrassMaterial() {
     return [
@@ -184,7 +178,6 @@ function createBrickMaterial() {
     ctx.fillStyle = '#B03030';
     ctx.fillRect(0, 0, size, size);
 
-    // Кирпичи
     ctx.fillStyle = '#EEEEEE';
     for (let y = 0; y < size; y += 16) {
         ctx.fillRect(0, y, size, 2);
@@ -208,7 +201,7 @@ function createCoalMaterial() {
 }
 
 // ============================================================
-// ИНВЕНТАРЬ — базовые + крафтовые
+// ИНВЕНТАРЬ
 // ============================================================
 
 const INVENTORY = [
@@ -225,11 +218,7 @@ const INVENTORY = [
 
 let selectedSlot = 0;
 let inventoryOpen = false;
-let craftingOpen = false;
-
 const ICON_CACHE = {};
-
-// ============ БЛОКИ ============
 
 const BLOCK_SIZE = 1;
 const blockMap = new Map();
@@ -255,7 +244,6 @@ function removeBlock(block) {
     block.geometry.dispose();
 }
 
-// ============ МИР ============
 const WORLD_SIZE = 8;
 const grassMaterial = createGrassMaterial();
 
@@ -265,7 +253,6 @@ for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
     }
 }
 
-// ============ ПОСТРОЙКИ ============
 const stoneMaterial = createStoneMaterial();
 
 createBlock(2, 1, 2, stoneMaterial);
@@ -316,8 +303,6 @@ for (let dx = -1; dx <= 1; dx++) {
 
 createBlock(treeX, 8, treeZ, leafMaterial);
 
-// ============ ПОДСВЕТКА ============
-
 const highlightBox = new THREE.Mesh(
     new THREE.BoxGeometry(BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02, BLOCK_SIZE + 0.02),
     new THREE.MeshBasicMaterial({
@@ -329,8 +314,6 @@ const highlightBox = new THREE.Mesh(
 );
 highlightBox.visible = false;
 scene.add(highlightBox);
-
-// ============ ЧЕЛОВЕЧЕК ============
 
 function createHuman() {
     const human = new THREE.Group();
@@ -410,8 +393,6 @@ const human = createHuman();
 human.position.set(0, 0.5, 0);
 scene.add(human);
 
-// ============ УПРАВЛЕНИЕ ============
-
 const keys = {};
 const player = { x: 0, z: 0, angle: 0, speed: 0.08, turnSpeed: 0.05 };
 
@@ -429,12 +410,9 @@ document.addEventListener('keydown', (e) => {
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(key)) e.preventDefault();
     if (normalizedKey === 'v') toggleCamera();
     if (normalizedKey === 'y') toggleInventory();
-    if (normalizedKey === 'r') toggleCrafting();
+    if (normalizedKey === 'r') toggleInventory();
     if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) selectSlot(parseInt(key) - 1);
-    if (key === 'escape') {
-        if (inventoryOpen) toggleInventory();
-        if (craftingOpen) toggleCrafting();
-    }
+    if (key === 'escape' && inventoryOpen) toggleInventory();
 });
 
 document.addEventListener('keyup', (e) => {
@@ -444,7 +422,7 @@ document.addEventListener('keyup', (e) => {
 });
 
 document.addEventListener('wheel', (e) => {
-    if (isPointerLocked && !inventoryOpen && !craftingOpen) {
+    if (isPointerLocked && !inventoryOpen) {
         if (e.deltaY > 0) selectSlot((selectedSlot + 1) % INVENTORY.length);
         else selectSlot((selectedSlot - 1 + INVENTORY.length) % INVENTORY.length);
     }
@@ -471,6 +449,9 @@ function toggleInventory() {
         modal.classList.add('open');
         if (isPointerLocked) document.exitPointerLock();
         drawPlayerPreview();
+        renderCraftingGrid();
+        checkRecipe();
+        initInventoryModal();
     } else {
         modal.classList.remove('open');
     }
@@ -500,7 +481,7 @@ let isPointerLocked = false;
 
 if (!isMobile) {
     canvas.addEventListener('click', () => {
-        if (!isPointerLocked && !inventoryOpen && !craftingOpen) {
+        if (!isPointerLocked && !inventoryOpen) {
             canvas.requestPointerLock().catch(err => console.log(err));
         }
     });
@@ -527,10 +508,6 @@ if (!isMobile) {
     });
 }
 
-// ============================================================
-// РАЗРУШЕНИЕ / УСТАНОВКА
-// ============================================================
-
 const raycaster = new THREE.Raycaster();
 const screenCenter = new THREE.Vector2(0, 0);
 
@@ -542,7 +519,7 @@ function getTargetBlock() {
 }
 
 function breakBlock() {
-    if (inventoryOpen || craftingOpen) return;
+    if (inventoryOpen) return;
     const hit = getTargetBlock();
     if (!hit) return;
     const block = hit.object;
@@ -555,7 +532,7 @@ function breakBlock() {
 }
 
 function placeBlock() {
-    if (inventoryOpen || craftingOpen) return;
+    if (inventoryOpen) return;
     const hit = getTargetBlock();
     if (!hit) return;
 
@@ -579,7 +556,7 @@ window.placeBlockBtn = placeBlock;
 
 if (!isMobile) {
     document.addEventListener('mousedown', (e) => {
-        if (inventoryOpen || craftingOpen) return;
+        if (inventoryOpen) return;
         if (e.button === 0) placeBlock();
         else if (e.button === 2) breakBlock();
     });
@@ -616,12 +593,8 @@ if (isMobile) {
     }, { passive: true });
 }
 
-// ============================================================
-// ОБНОВЛЕНИЕ
-// ============================================================
-
 function update() {
-    if (!inventoryOpen && !craftingOpen) {
+    if (!inventoryOpen) {
         if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
         if (keys['d'] || keys['arrowright']) player.angle -= player.turnSpeed;
 
@@ -673,7 +646,7 @@ function update() {
         human.visible = false;
     }
 
-    if (!inventoryOpen && !craftingOpen) {
+    if (!inventoryOpen) {
         const hit = getTargetBlock();
         if (hit) {
             highlightBox.position.copy(hit.object.position);
@@ -751,7 +724,7 @@ function getIcon(index) {
 }
 
 // ============================================================
-// ПРЕВЬЮ ИГРОКА
+// ПРЕВЬЮ
 // ============================================================
 
 function drawPlayerPreview() {
@@ -817,59 +790,31 @@ function drawPlayerPreview() {
 // КРАФТ
 // ============================================================
 
-// Рецепты: нужно [индексы блоков] => получаем [индекс блока]
-// Индексы: 0=Трава, 1=Камень, 2=Дерево, 3=Листва, 4=Земля,
-//          5=Доски, 6=Кирпич, 7=Песок, 8=Уголь
-
 const RECIPES = [
-    // 1 Дерево → 1 Доски
     { inputs: { 2: 1 }, output: 5, name: 'Доски' },
-    // 2 Дерево → 1 Уголь
     { inputs: { 2: 2 }, output: 8, name: 'Уголь' },
-    // 3 Камень → 1 Кирпич
     { inputs: { 1: 3 }, output: 6, name: 'Кирпич' },
-    // 2 Камень + 1 Песок → 2 Песок
-    { inputs: { 1: 1, 7: 1 }, output: 7, name: 'Песок', outputCount: 2 }
+    { inputs: { 1: 1, 7: 1 }, output: 7, name: 'Песок' }
 ];
 
-let craftingGrid = {}; // { slotIndex: blockIndex }
-
-function toggleCrafting() {
-    craftingOpen = !craftingOpen;
-    const modal = document.getElementById('crafting-modal');
-    if (!modal) return;
-
-    if (craftingOpen) {
-        modal.classList.add('open');
-        if (isPointerLocked) document.exitPointerLock();
-        renderCraftingGrid();
-        checkRecipe();
-    } else {
-        modal.classList.remove('open');
-    }
-}
-window.toggleCrafting = toggleCrafting;
+let craftingGrid = {};
 
 function renderCraftingGrid() {
     const grid = document.getElementById('crafting-grid');
     if (!grid) return;
     grid.innerHTML = '';
 
-    // 9 слотов
     for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
         cell.className = 'craft-cell';
 
         if (craftingGrid[i] !== undefined) {
             const blockIndex = craftingGrid[i];
-            const item = INVENTORY[blockIndex];
-
             const img = document.createElement('img');
             img.className = 'inv-icon-img';
             img.src = getIcon(blockIndex);
             cell.appendChild(img);
 
-            // Клик — убрать
             cell.onclick = () => {
                 delete craftingGrid[i];
                 renderCraftingGrid();
@@ -884,7 +829,6 @@ function renderCraftingGrid() {
 }
 
 function addToCraftingGrid(blockIndex) {
-    // Ищем пустой слот
     for (let i = 0; i < 9; i++) {
         if (craftingGrid[i] === undefined) {
             craftingGrid[i] = blockIndex;
@@ -903,7 +847,6 @@ function checkRecipe() {
 
     if (!resultEl) return;
 
-    // Считаем сколько чего в сетке
     const counts = {};
     for (let i = 0; i < 9; i++) {
         if (craftingGrid[i] !== undefined) {
@@ -912,26 +855,21 @@ function checkRecipe() {
         }
     }
 
-    // Ищем подходящий рецепт
     let matched = null;
     for (const recipe of RECIPES) {
-        let ok = true;
         const needed = recipe.inputs;
         const neededKeys = Object.keys(needed).map(Number);
         const haveKeys = Object.keys(counts).map(Number);
 
-        // Проверяем, что нет лишних
-        if (haveKeys.length !== neededKeys.length) {
-            ok = false;
-        } else {
-            for (const k of neededKeys) {
-                if (counts[k] !== needed[k]) {
-                    ok = false;
-                    break;
-                }
+        if (haveKeys.length !== neededKeys.length) continue;
+
+        let ok = true;
+        for (const k of neededKeys) {
+            if (counts[k] !== needed[k]) {
+                ok = false;
+                break;
             }
         }
-
         if (ok) {
             matched = recipe;
             break;
@@ -941,7 +879,7 @@ function checkRecipe() {
     if (matched) {
         resultEl.classList.add('active');
         resultImg.src = getIcon(matched.output);
-        resultName.textContent = `${matched.name} x${matched.outputCount || 1}`;
+        resultName.textContent = `${matched.name}`;
     } else {
         resultEl.classList.remove('active');
         resultImg.src = '';
@@ -953,7 +891,6 @@ function craftItem() {
     const resultEl = document.getElementById('crafting-result');
     if (!resultEl || !resultEl.classList.contains('active')) return;
 
-    // Найти рецепт
     const counts = {};
     for (let i = 0; i < 9; i++) {
         if (craftingGrid[i] !== undefined) {
@@ -985,29 +922,11 @@ function craftItem() {
 
     if (!matched) return;
 
-    // Очищаем сетку
     craftingGrid = {};
     renderCraftingGrid();
-
-    // Находим или создаём слот для результата
-    let foundSlot = -1;
-    for (let i = 0; i < INVENTORY.length; i++) {
-        if (i === matched.output) {
-            foundSlot = i;
-            break;
-        }
-    }
-
-    if (foundSlot >= 0) {
-        selectSlot(foundSlot);
-    }
-
-    // Обновляем hotbar
     initHotbar();
-
     checkRecipe();
 
-    // Уведомление
     const notif = document.getElementById('craft-notification');
     if (notif) {
         notif.textContent = `✅ Создано: ${matched.name}`;
@@ -1042,7 +961,6 @@ function initHotbar() {
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
         img.src = getIcon(index);
-        img.alt = item.name;
         slot.appendChild(img);
 
         const num = document.createElement('span');
@@ -1068,48 +986,18 @@ function initInventoryModal() {
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
         img.src = getIcon(index);
-        img.alt = item.name;
         slot.appendChild(img);
 
-        const name = document.createElement('div');
-        name.className = 'inv-modal-name';
-        name.textContent = item.name;
-        slot.appendChild(name);
-
-        const num = document.createElement('span');
-        num.className = 'inv-num';
-        num.textContent = (index + 1);
-        slot.appendChild(num);
-
-        slot.onclick = () => selectSlot(index);
-        modal.appendChild(slot);
-    });
-}
-
-function initCraftingBlocks() {
-    const container = document.getElementById('crafting-blocks');
-    if (!container) return;
-    container.innerHTML = '';
-
-    INVENTORY.forEach((item, index) => {
-        const slot = document.createElement('div');
-        slot.className = 'craft-block';
         slot.title = item.name;
 
-        const img = document.createElement('img');
-        img.className = 'inv-icon-img';
-        img.src = getIcon(index);
-        img.alt = item.name;
-        slot.appendChild(img);
-
+        // Клик: добавить в крафт
         slot.onclick = () => addToCraftingGrid(index);
-        container.appendChild(slot);
+        modal.appendChild(slot);
     });
 }
 
 initHotbar();
 initInventoryModal();
-initCraftingBlocks();
 
 const yBtn = document.createElement('button');
 yBtn.id = 'inventory-toggle-btn';
@@ -1117,17 +1005,8 @@ yBtn.innerHTML = '🎒';
 yBtn.onclick = toggleInventory;
 document.body.appendChild(yBtn);
 
-const rBtn = document.createElement('button');
-rBtn.id = 'crafting-toggle-btn';
-rBtn.innerHTML = '🔨';
-rBtn.onclick = toggleCrafting;
-document.body.appendChild(rBtn);
-
 const closeBtn = document.querySelector('.inv-modal-close');
 if (closeBtn) closeBtn.onclick = toggleInventory;
-
-const closeCraftBtn = document.querySelector('.craft-modal-close');
-if (closeCraftBtn) closeCraftBtn.onclick = toggleCrafting;
 
 const craftBtn = document.getElementById('craft-btn');
 if (craftBtn) craftBtn.onclick = craftItem;
