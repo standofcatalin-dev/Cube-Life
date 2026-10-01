@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 11: Инвентарь + Крафт в одном окне
+// CUBE LIFE — Этап 13: Прыжок + Присед
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -55,10 +55,8 @@ function createTexture(baseColor, noiseAmount = 30, size = 64) {
     c.width = size;
     c.height = size;
     const ctx = c.getContext('2d');
-
     ctx.fillStyle = baseColor;
     ctx.fillRect(0, 0, size, size);
-
     const imageData = ctx.getImageData(0, 0, size, size);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
@@ -68,7 +66,6 @@ function createTexture(baseColor, noiseAmount = 30, size = 64) {
         data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + v));
     }
     ctx.putImageData(imageData, 0, 0);
-
     const tex = new THREE.CanvasTexture(c);
     tex.magFilter = THREE.NearestFilter;
     tex.minFilter = THREE.NearestFilter;
@@ -81,26 +78,13 @@ function createWoodTexture() {
     c.width = size;
     c.height = size;
     const ctx = c.getContext('2d');
-
     ctx.fillStyle = '#6B4423';
     ctx.fillRect(0, 0, size, size);
-
     for (let i = 0; i < 12; i++) {
         const x = Math.random() * size;
         ctx.fillStyle = Math.random() > 0.5 ? '#5A3A1F' : '#8B6535';
         ctx.fillRect(x, 0, 1 + Math.random() * 2, size);
     }
-
-    const imageData = ctx.getImageData(0, 0, size, size);
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const v = (Math.random() - 0.5) * 20;
-        data[i] = Math.max(0, Math.min(255, data[i] + v));
-        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + v));
-        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + v));
-    }
-    ctx.putImageData(imageData, 0, 0);
-
     const tex = new THREE.CanvasTexture(c);
     tex.magFilter = THREE.NearestFilter;
     tex.minFilter = THREE.NearestFilter;
@@ -113,17 +97,14 @@ function createPlankTexture() {
     c.width = size;
     c.height = size;
     const ctx = c.getContext('2d');
-
     ctx.fillStyle = '#A0703A';
     ctx.fillRect(0, 0, size, size);
-
     for (let y = 0; y < size; y += 16) {
         ctx.fillStyle = '#5A3A1F';
         ctx.fillRect(0, y, size, 2);
         ctx.fillStyle = '#8B6535';
         ctx.fillRect(0, y + 2, size, 14);
     }
-
     const tex = new THREE.CanvasTexture(c);
     tex.magFilter = THREE.NearestFilter;
     tex.minFilter = THREE.NearestFilter;
@@ -174,10 +155,8 @@ function createBrickMaterial() {
     c.width = size;
     c.height = size;
     const ctx = c.getContext('2d');
-
     ctx.fillStyle = '#B03030';
     ctx.fillRect(0, 0, size, size);
-
     ctx.fillStyle = '#EEEEEE';
     for (let y = 0; y < size; y += 16) {
         ctx.fillRect(0, y, size, 2);
@@ -185,7 +164,6 @@ function createBrickMaterial() {
             ctx.fillRect(x, y, 2, 16);
         }
     }
-
     const tex = new THREE.CanvasTexture(c);
     tex.magFilter = THREE.NearestFilter;
     tex.minFilter = THREE.NearestFilter;
@@ -201,24 +179,30 @@ function createCoalMaterial() {
 }
 
 // ============================================================
-// ИНВЕНТАРЬ
+// ВСЕ БЛОКИ
 // ============================================================
 
-const INVENTORY = [
-    { name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#4A9D2A' },
-    { name: 'Камень', material: createStoneMaterial(),  color: '#808080', secondaryColor: '#6F6F6F' },
-    { name: 'Дерево', material: createWoodMaterial(),   color: '#6B4423', secondaryColor: '#5A3A1F' },
-    { name: 'Листва', material: createLeafMaterial(),   color: '#2D5A1E', secondaryColor: '#1D4A0E' },
-    { name: 'Земля',  material: createDirtMaterial(),   color: '#5A3A1A', secondaryColor: '#4A2F18' },
-    { name: 'Доски',  material: createPlankMaterial(),  color: '#A0703A', secondaryColor: '#8B6535' },
-    { name: 'Кирпич', material: createBrickMaterial(),  color: '#B03030', secondaryColor: '#8B2020' },
-    { name: 'Песок',  material: createSandMaterial(),   color: '#E8D5A0', secondaryColor: '#C8B580' },
-    { name: 'Уголь',  material: createCoalMaterial(),   color: '#2A2A2A', secondaryColor: '#000000' }
+const ALL_BLOCKS = [
+    { id: 0, name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#4A9D2A' },
+    { id: 1, name: 'Камень', material: createStoneMaterial(),  color: '#808080', secondaryColor: '#6F6F6F' },
+    { id: 2, name: 'Дерево', material: createWoodMaterial(),   color: '#6B4423', secondaryColor: '#5A3A1F' },
+    { id: 3, name: 'Листва', material: createLeafMaterial(),   color: '#2D5A1E', secondaryColor: '#1D4A0E' },
+    { id: 4, name: 'Земля',  material: createDirtMaterial(),   color: '#5A3A1A', secondaryColor: '#4A2F18' },
+    { id: 5, name: 'Доски',  material: createPlankMaterial(),  color: '#A0703A', secondaryColor: '#8B6535' },
+    { id: 6, name: 'Кирпич', material: createBrickMaterial(),  color: '#B03030', secondaryColor: '#8B2020' },
+    { id: 7, name: 'Песок',  material: createSandMaterial(),   color: '#E8D5A0', secondaryColor: '#C8B580' },
+    { id: 8, name: 'Уголь',  material: createCoalMaterial(),   color: '#2A2A2A', secondaryColor: '#000000' }
 ];
+
+let unlockedBlocks = [0, 1, 2, 3, 4];
 
 let selectedSlot = 0;
 let inventoryOpen = false;
 const ICON_CACHE = {};
+
+// ============================================================
+// БЛОКИ В МИРЕ
+// ============================================================
 
 const BLOCK_SIZE = 1;
 const blockMap = new Map();
@@ -315,6 +299,10 @@ const highlightBox = new THREE.Mesh(
 highlightBox.visible = false;
 scene.add(highlightBox);
 
+// ============================================================
+// ЧЕЛОВЕЧЕК
+// ============================================================
+
 function createHuman() {
     const human = new THREE.Group();
 
@@ -390,17 +378,35 @@ function createHuman() {
 }
 
 const human = createHuman();
-human.position.set(0, 0.5, 0);
+human.position.set(0, 0, 0);
 scene.add(human);
 
+// ============================================================
+// УПРАВЛЕНИЕ
+// ============================================================
+
 const keys = {};
-const player = { x: 0, z: 0, angle: 0, speed: 0.08, turnSpeed: 0.05 };
+
+const player = {
+    x: 0,
+    z: 0,
+    y: 0,           // высота (для прыжка)
+    vy: 0,          // вертикальная скорость
+    angle: 0,
+    speed: 0.08,
+    turnSpeed: 0.05,
+    isJumping: false,
+    isCrouching: false
+};
+
+const GRAVITY = -0.015;
+const JUMP_FORCE = 0.18;
 
 let cameraMode = 3;
 let cameraFollowAngle = 0;
 let cameraPitchAngle = 0;
 
-const KEY_MAP = { 'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v', 'н': 'y', 'к': 'r' };
+const KEY_MAP = { 'ц': 'w', 'ф': 'a', 'ы': 's', 'в': 'd', 'м': 'v', 'н': 'y' };
 
 document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
@@ -410,9 +416,13 @@ document.addEventListener('keydown', (e) => {
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(key)) e.preventDefault();
     if (normalizedKey === 'v') toggleCamera();
     if (normalizedKey === 'y') toggleInventory();
-    if (normalizedKey === 'r') toggleInventory();
     if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) selectSlot(parseInt(key) - 1);
     if (key === 'escape' && inventoryOpen) toggleInventory();
+
+    // Прыжок
+    if (key === ' ' || normalizedKey === 'space') {
+        jump();
+    }
 });
 
 document.addEventListener('keyup', (e) => {
@@ -423,8 +433,8 @@ document.addEventListener('keyup', (e) => {
 
 document.addEventListener('wheel', (e) => {
     if (isPointerLocked && !inventoryOpen) {
-        if (e.deltaY > 0) selectSlot((selectedSlot + 1) % INVENTORY.length);
-        else selectSlot((selectedSlot - 1 + INVENTORY.length) % INVENTORY.length);
+        if (e.deltaY > 0) selectSlot((selectedSlot + 1) % unlockedBlocks.length);
+        else selectSlot((selectedSlot - 1 + unlockedBlocks.length) % unlockedBlocks.length);
     }
 });
 
@@ -458,24 +468,56 @@ function toggleInventory() {
 }
 window.toggleInventory = toggleInventory;
 
-function selectSlot(index) {
-    if (index < 0 || index >= INVENTORY.length) return;
-    selectedSlot = index;
+function selectSlot(slotIndex) {
+    if (slotIndex < 0 || slotIndex >= unlockedBlocks.length) return;
+    selectedSlot = slotIndex;
 
     document.querySelectorAll('.inv-slot[data-hotbar]').forEach((el, i) => {
-        if (i === index) el.classList.add('active');
+        if (i === slotIndex) el.classList.add('active');
         else el.classList.remove('active');
     });
 
-    document.querySelectorAll('.inv-modal-slot').forEach((el, i) => {
-        if (i === index) el.classList.add('active');
-        else el.classList.remove('active');
-    });
-
+    const blockId = unlockedBlocks[selectedSlot];
+    const block = ALL_BLOCKS[blockId];
     const selectedEl = document.getElementById('selected-block');
-    if (selectedEl) selectedEl.textContent = INVENTORY[index].name;
+    if (selectedEl) selectedEl.textContent = block.name;
 }
 window.selectSlot = selectSlot;
+
+// ============ ПРЫЖОК ============
+
+function jump() {
+    if (inventoryOpen) return;
+    if (player.isJumping) return; // уже в воздухе
+    player.vy = JUMP_FORCE;
+    player.isJumping = true;
+}
+window.jump = jump;
+
+// ============ ПРИСЕД ============
+
+// Присед — через ShiftLeft или ShiftRight
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') {
+        player.isCrouching = true;
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') {
+        player.isCrouching = false;
+    }
+});
+
+// Для мобильных — кнопка
+function crouchStart() {
+    player.isCrouching = true;
+}
+function crouchEnd() {
+    player.isCrouching = false;
+}
+window.crouchStart = crouchStart;
+window.crouchEnd = crouchEnd;
 
 let isPointerLocked = false;
 
@@ -507,6 +549,10 @@ if (!isMobile) {
         }
     });
 }
+
+// ============================================================
+// РАЗРУШЕНИЕ / УСТАНОВКА
+// ============================================================
 
 const raycaster = new THREE.Raycaster();
 const screenCenter = new THREE.Vector2(0, 0);
@@ -543,12 +589,13 @@ function placeBlock() {
     if (blockMap.has(key)) return;
 
     const dx = Math.abs(newPos.x - player.x);
-    const dy = newPos.y - 0.5;
     const dz = Math.abs(newPos.z - player.z);
+    const dy = newPos.y - (player.y + 0.5);
     if (dx < 0.6 && dz < 0.6 && dy > -0.5 && dy < 1.5) return;
     if (newPos.y < 0) return;
 
-    createBlock(newPos.x, newPos.y, newPos.z, INVENTORY[selectedSlot].material);
+    const blockId = unlockedBlocks[selectedSlot];
+    createBlock(newPos.x, newPos.y, newPos.z, ALL_BLOCKS[blockId].material);
 }
 
 window.breakBlockBtn = breakBlock;
@@ -593,27 +640,49 @@ if (isMobile) {
     }, { passive: true });
 }
 
+// ============================================================
+// ОБНОВЛЕНИЕ
+// ============================================================
+
 function update() {
     if (!inventoryOpen) {
         if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
         if (keys['d'] || keys['arrowright']) player.angle -= player.turnSpeed;
 
+        // Скорость зависит от приседа
+        const speed = player.isCrouching ? player.speed * 0.4 : player.speed;
+
         if (keys['w'] || keys['arrowup']) {
-            player.x += Math.sin(player.angle) * player.speed;
-            player.z += Math.cos(player.angle) * player.speed;
+            player.x += Math.sin(player.angle) * speed;
+            player.z += Math.cos(player.angle) * speed;
         }
         if (keys['s'] || keys['arrowdown']) {
-            player.x -= Math.sin(player.angle) * player.speed;
-            player.z -= Math.cos(player.angle) * player.speed;
+            player.x -= Math.sin(player.angle) * speed;
+            player.z -= Math.cos(player.angle) * speed;
         }
+    }
+
+    // ============ ФИЗИКА ПРЫЖКА ============
+    player.vy += GRAVITY;
+    player.y += player.vy;
+
+    // Приземление
+    if (player.y <= 0) {
+        player.y = 0;
+        player.vy = 0;
+        player.isJumping = false;
     }
 
     const limit = WORLD_SIZE / 2 - 0.5;
     player.x = Math.max(-limit, Math.min(limit, player.x));
     player.z = Math.max(-limit, Math.min(limit, player.z));
 
+    // Приседание уменьшает высоту
+    const crouchOffset = player.isCrouching ? -0.3 : 0;
+
     human.position.x = player.x;
     human.position.z = player.z;
+    human.position.y = player.y + 0.5 + crouchOffset;
     human.rotation.y = player.angle;
 
     if (cameraMode === 3) {
@@ -622,7 +691,8 @@ function update() {
 
         const totalAngle = player.angle + cameraFollowAngle;
         const camDist = 6;
-        const camHeight = Math.max(0.5, 4 + cameraPitchAngle * 3);
+        const baseHeight = 4 + cameraPitchAngle * 3;
+        const camHeight = Math.max(0.5, baseHeight + player.y);
 
         const targetX = player.x - Math.sin(totalAngle) * camDist;
         const targetZ = player.z - Math.cos(totalAngle) * camDist;
@@ -631,16 +701,16 @@ function update() {
         camera.position.z += (targetZ - camera.position.z) * 0.15;
         camera.position.y += (camHeight - camera.position.y) * 0.15;
 
-        camera.lookAt(player.x, 1.2, player.z);
+        camera.lookAt(player.x, 1.2 + player.y, player.z);
         human.visible = true;
     } else {
         camera.position.x = player.x;
         camera.position.z = player.z;
-        camera.position.y = 1.75;
+        camera.position.y = 1.75 + player.y + crouchOffset;
 
         const lookX = player.x + Math.sin(player.angle) * 5;
         const lookZ = player.z + Math.cos(player.angle) * 5;
-        const lookY = 1.75 + cameraPitchAngle * 4;
+        const lookY = 1.75 + cameraPitchAngle * 4 + player.y + crouchOffset;
 
         camera.lookAt(lookX, lookY, lookZ);
         human.visible = false;
@@ -716,11 +786,11 @@ function makeInvIcon(color, secondaryColor) {
     return c.toDataURL();
 }
 
-function getIcon(index) {
-    if (ICON_CACHE[index]) return ICON_CACHE[index];
-    const item = INVENTORY[index];
-    ICON_CACHE[index] = makeInvIcon(item.color, item.secondaryColor);
-    return ICON_CACHE[index];
+function getIcon(blockId) {
+    if (ICON_CACHE[blockId]) return ICON_CACHE[blockId];
+    const block = ALL_BLOCKS[blockId];
+    ICON_CACHE[blockId] = makeInvIcon(block.color, block.secondaryColor);
+    return ICON_CACHE[blockId];
 }
 
 // ============================================================
@@ -879,10 +949,12 @@ function checkRecipe() {
     if (matched) {
         resultEl.classList.add('active');
         resultImg.src = getIcon(matched.output);
-        resultName.textContent = `${matched.name}`;
+        resultImg.style.display = 'block';
+        resultName.textContent = matched.name;
     } else {
         resultEl.classList.remove('active');
-        resultImg.src = '';
+        resultImg.removeAttribute('src');
+        resultImg.style.display = 'none';
         resultName.textContent = '...';
     }
 }
@@ -922,6 +994,11 @@ function craftItem() {
 
     if (!matched) return;
 
+    // Разблокируем блок, если его ещё нет
+    if (!unlockedBlocks.includes(matched.output)) {
+        unlockedBlocks.push(matched.output);
+    }
+
     craftingGrid = {};
     renderCraftingGrid();
     initHotbar();
@@ -952,7 +1029,8 @@ function initHotbar() {
     if (!invBar) return;
     invBar.innerHTML = '';
 
-    INVENTORY.forEach((item, index) => {
+    unlockedBlocks.forEach((blockId, index) => {
+        const block = ALL_BLOCKS[blockId];
         const slot = document.createElement('div');
         slot.className = 'inv-slot';
         slot.setAttribute('data-hotbar', 'true');
@@ -960,7 +1038,7 @@ function initHotbar() {
 
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
-        img.src = getIcon(index);
+        img.src = getIcon(blockId);
         slot.appendChild(img);
 
         const num = document.createElement('span');
@@ -978,20 +1056,21 @@ function initInventoryModal() {
     if (!modal) return;
     modal.innerHTML = '';
 
-    INVENTORY.forEach((item, index) => {
+    // Показываем только разблокированные блоки
+    unlockedBlocks.forEach((blockId, index) => {
+        const block = ALL_BLOCKS[blockId];
         const slot = document.createElement('div');
         slot.className = 'inv-modal-slot';
         if (index === selectedSlot) slot.classList.add('active');
 
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
-        img.src = getIcon(index);
+        img.src = getIcon(blockId);
         slot.appendChild(img);
 
-        slot.title = item.name;
+        slot.title = block.name;
 
-        // Клик: добавить в крафт
-        slot.onclick = () => addToCraftingGrid(index);
+        slot.onclick = () => addToCraftingGrid(blockId);
         modal.appendChild(slot);
     });
 }
@@ -1004,6 +1083,23 @@ yBtn.id = 'inventory-toggle-btn';
 yBtn.innerHTML = '🎒';
 yBtn.onclick = toggleInventory;
 document.body.appendChild(yBtn);
+
+// Кнопка прыжка (мобильные)
+const jumpBtn = document.createElement('button');
+jumpBtn.id = 'jump-btn';
+jumpBtn.innerHTML = '🔼';
+jumpBtn.onclick = jump;
+document.body.appendChild(jumpBtn);
+
+// Кнопка приседа (мобильные)
+const crouchBtn = document.createElement('button');
+crouchBtn.id = 'crouch-btn';
+crouchBtn.innerHTML = '🔽';
+crouchBtn.ontouchstart = crouchStart;
+crouchBtn.ontouchend = crouchEnd;
+crouchBtn.onmousedown = crouchStart;
+crouchBtn.onmouseup = crouchEnd;
+document.body.appendChild(crouchBtn);
 
 const closeBtn = document.querySelector('.inv-modal-close');
 if (closeBtn) closeBtn.onclick = toggleInventory;
