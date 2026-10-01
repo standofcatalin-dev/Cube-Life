@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 4.3: Рабочая версия с инвентарём
+// CUBE LIFE — Этап 5: Инвентарь как в Minecraft (hotbar)
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -42,7 +42,7 @@ sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
 // ============================================================
-// ТЕКСТУРЫ (простые процедурные)
+// ТЕКСТУРЫ
 // ============================================================
 
 function createTexture(baseColor, noiseAmount = 30, size = 64) {
@@ -70,6 +70,41 @@ function createTexture(baseColor, noiseAmount = 30, size = 64) {
     return tex;
 }
 
+// Специальная текстура для дерева (с вертикальными полосками)
+function createWoodTexture() {
+    const size = 64;
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+
+    ctx.fillStyle = '#6B4423';
+    ctx.fillRect(0, 0, size, size);
+
+    // Вертикальные полосы
+    for (let i = 0; i < 12; i++) {
+        const x = Math.random() * size;
+        ctx.fillStyle = Math.random() > 0.5 ? '#5A3A1F' : '#8B6535';
+        ctx.fillRect(x, 0, 1 + Math.random() * 2, size);
+    }
+
+    // Шум
+    const imageData = ctx.getImageData(0, 0, size, size);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        const v = (Math.random() - 0.5) * 20;
+        data[i] = Math.max(0, Math.min(255, data[i] + v));
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + v));
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + v));
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    return tex;
+}
+
 // ============ МАТЕРИАЛЫ ============
 
 function createGrassMaterial() {
@@ -85,8 +120,7 @@ function createStoneMaterial() {
 }
 
 function createWoodMaterial() {
-    // Дерево: бока — кора, верх/низ — светлое
-    const sideMat = new THREE.MeshLambertMaterial({ map: createTexture('#6B4423') });
+    const sideMat = new THREE.MeshLambertMaterial({ map: createWoodTexture() });
     const topMat = new THREE.MeshLambertMaterial({ map: createTexture('#A0703A') });
 
     return [sideMat, sideMat, topMat, topMat, sideMat, sideMat];
@@ -101,15 +135,40 @@ function createDirtMaterial() {
 }
 
 // ============================================================
-// ИНВЕНТАРЬ
+// ИНВЕНТАРЬ — с функциями для получения цвета/иконки
 // ============================================================
 
 const INVENTORY = [
-    { name: 'Трава',  material: createGrassMaterial(),  icon: '🟩' },
-    { name: 'Камень', material: createStoneMaterial(),  icon: '⬜' },
-    { name: 'Дерево', material: createWoodMaterial(),   icon: '🟫' },
-    { name: 'Листва', material: createLeafMaterial(),   icon: '🌿' },
-    { name: 'Земля',  material: createDirtMaterial(),   icon: '🟤' }
+    {
+        name: 'Трава',
+        material: createGrassMaterial(),
+        color: '#5AAD3A',
+        secondaryColor: '#8B6535'
+    },
+    {
+        name: 'Камень',
+        material: createStoneMaterial(),
+        color: '#808080',
+        secondaryColor: '#6F6F6F'
+    },
+    {
+        name: 'Дерево',
+        material: createWoodMaterial(),
+        color: '#6B4423',
+        secondaryColor: '#8B6535'
+    },
+    {
+        name: 'Листва',
+        material: createLeafMaterial(),
+        color: '#2D5A1E',
+        secondaryColor: '#3D6A2E'
+    },
+    {
+        name: 'Земля',
+        material: createDirtMaterial(),
+        color: '#5A3A1A',
+        secondaryColor: '#7A4E30'
+    }
 ];
 
 let selectedSlot = 0;
@@ -150,12 +209,9 @@ for (let x = -WORLD_SIZE / 2; x < WORLD_SIZE / 2; x++) {
     }
 }
 
-// ============================================================
-// ПОСТРОЙКИ
-// ============================================================
+// ============ ПОСТРОЙКИ ============
 const stoneMaterial = createStoneMaterial();
 
-// Холм
 createBlock(2, 1, 2, stoneMaterial);
 createBlock(3, 1, 2, stoneMaterial);
 createBlock(2, 1, 3, stoneMaterial);
@@ -172,14 +228,12 @@ const leafMaterial = createLeafMaterial();
 const treeX = -3;
 const treeZ = -3;
 
-// Ствол
 createBlock(treeX, 1, treeZ, woodMaterial);
 createBlock(treeX, 2, treeZ, woodMaterial);
 createBlock(treeX, 3, treeZ, woodMaterial);
 createBlock(treeX, 4, treeZ, woodMaterial);
 createBlock(treeX, 5, treeZ, woodMaterial);
 
-// Крона — нижний слой (5×5, без углов)
 createBlock(treeX - 2, 5, treeZ, leafMaterial);
 createBlock(treeX + 2, 5, treeZ, leafMaterial);
 createBlock(treeX, 5, treeZ - 2, leafMaterial);
@@ -195,21 +249,18 @@ createBlock(treeX + 2, 5, treeZ - 1, leafMaterial);
 createBlock(treeX - 2, 5, treeZ + 1, leafMaterial);
 createBlock(treeX + 2, 5, treeZ + 1, leafMaterial);
 
-// Средний слой (5×5 полный)
 for (let dx = -2; dx <= 2; dx++) {
     for (let dz = -2; dz <= 2; dz++) {
         createBlock(treeX + dx, 6, treeZ + dz, leafMaterial);
     }
 }
 
-// Верхний слой (3×3)
 for (let dx = -1; dx <= 1; dx++) {
     for (let dz = -1; dz <= 1; dz++) {
         createBlock(treeX + dx, 7, treeZ + dz, leafMaterial);
     }
 }
 
-// Макушка
 createBlock(treeX, 8, treeZ, leafMaterial);
 
 // ============================================================
@@ -349,6 +400,7 @@ document.addEventListener('keydown', (e) => {
     if (normalizedKey === 'v') {
         toggleCamera();
     }
+    // Цифры 1-5 для выбора слота
     if (['1', '2', '3', '4', '5'].includes(key)) {
         selectSlot(parseInt(key) - 1);
     }
@@ -381,8 +433,10 @@ window.releaseKey = releaseKey;
 
 function toggleCamera() {
     cameraMode = cameraMode === 3 ? 1 : 3;
-    document.getElementById('camera-mode').textContent =
-        cameraMode === 3 ? '3-е лицо' : '1-е лицо';
+    const el = document.getElementById('camera-mode');
+    if (el) {
+        el.textContent = cameraMode === 3 ? '3-е лицо' : '1-е лицо';
+    }
 }
 window.toggleCamera = toggleCamera;
 
@@ -399,12 +453,6 @@ function selectSlot(index) {
             el.classList.remove('active');
         }
     });
-
-    const item = INVENTORY[index];
-    const selectedEl = document.getElementById('selected-block');
-    if (selectedEl) {
-        selectedEl.textContent = item.name;
-    }
 }
 window.selectSlot = selectSlot;
 
@@ -632,5 +680,72 @@ if (!isMobile) {
     mobileOnly.forEach(el => el.style.display = 'none');
 }
 
-// ============ ИНИЦИАЛИЗАЦИЯ ============
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ HOTBAR (с canvas-иконками)
+// ============================================================
+
+function makeInvIcon(color, secondaryColor) {
+    // Рисуем иконку блока — маленький кубик с текстурой
+    const size = 32;
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+
+    // Основной цвет
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, size, size);
+
+    // Пятна (текстура)
+    for (let i = 0; i < 40; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 2 + Math.random() * 3;
+        const h = 2 + Math.random() * 3;
+        ctx.fillStyle = secondaryColor;
+        ctx.fillRect(x, y, w, h);
+    }
+
+    // Рамка (для эффекта кубика)
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, size - 2, size - 2);
+
+    return c.toDataURL();
+}
+
+function initHotbar() {
+    const invBar = document.getElementById('inventory-bar');
+    if (!invBar) return;
+
+    invBar.innerHTML = '';
+
+    INVENTORY.forEach((item, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'inv-slot';
+        if (index === selectedSlot) slot.classList.add('active');
+
+        // Иконка-картинка
+        const img = document.createElement('img');
+        img.className = 'inv-icon-img';
+        img.src = makeInvIcon(item.color, item.secondaryColor);
+        img.alt = item.name;
+        slot.appendChild(img);
+
+        // Номер слота
+        const num = document.createElement('span');
+        num.className = 'inv-num';
+        num.textContent = (index + 1);
+        slot.appendChild(num);
+
+        // Название блока (всплывает при наведении)
+        slot.title = item.name;
+
+        slot.onclick = () => selectSlot(index);
+
+        invBar.appendChild(slot);
+    });
+}
+
+initHotbar();
 selectSlot(0);
