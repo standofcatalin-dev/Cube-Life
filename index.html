@@ -32,6 +32,16 @@
             </div>
         </div>
 
+        <!-- МЕНЮ ПАУЗЫ -->
+        <div id="pause-menu">
+            <div class="pause-content">
+                <div class="pause-title">⏸ ПАУЗА</div>
+                <button id="pause-resume-btn" class="pause-btn resume">▶ Продолжить</button>
+                <button id="pause-exit-btn" class="pause-btn exit">🚪 Выйти в меню</button>
+                <div class="pause-hint">Esc — продолжить • закрыть можно тем же Esc</div>
+            </div>
+        </div>
+
         <div id="hud">
             <div class="hud-title">⬛ CUBE LIFE</div>
             <div class="hud-right">
@@ -116,7 +126,7 @@
             <button id="place-btn" onclick="placeBlockBtn()">🧱</button>
         </div>
 
-        <div id="hint">Y — инвентарь • Space — прыжок • Shift — присед • V — камера</div>
+        <div id="hint">Y — инвентарь • Space — прыжок • Shift — присед • Esc — пауза</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
