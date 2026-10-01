@@ -30,10 +30,6 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
 sunLight.position.set(50, 100, 30);
 scene.add(sunLight);
 
-// ============================================================
-// ХЕЛПЕРЫ
-// ============================================================
-
 function lightenColor(hex, percent) {
     const num = parseInt(hex.replace('#', ''), 16);
     const r = Math.min(255, (num >> 16) + percent);
@@ -178,10 +174,6 @@ function createCoalMaterial() {
     return new THREE.MeshLambertMaterial({ map: createTexture('#2A2A2A', 40) });
 }
 
-// ============================================================
-// ВСЕ БЛОКИ
-// ============================================================
-
 const ALL_BLOCKS = [
     { id: 0, name: 'Трава',  material: createGrassMaterial(),  color: '#5AAD3A', secondaryColor: '#4A9D2A' },
     { id: 1, name: 'Камень', material: createStoneMaterial(),  color: '#808080', secondaryColor: '#6F6F6F' },
@@ -195,14 +187,9 @@ const ALL_BLOCKS = [
 ];
 
 let unlockedBlocks = [0, 1, 2, 3, 4];
-
 let selectedSlot = 0;
 let inventoryOpen = false;
 const ICON_CACHE = {};
-
-// ============================================================
-// БЛОКИ В МИРЕ
-// ============================================================
 
 const BLOCK_SIZE = 1;
 const blockMap = new Map();
@@ -299,10 +286,6 @@ const highlightBox = new THREE.Mesh(
 highlightBox.visible = false;
 scene.add(highlightBox);
 
-// ============================================================
-// ЧЕЛОВЕЧЕК
-// ============================================================
-
 function createHuman() {
     const human = new THREE.Group();
 
@@ -381,17 +364,13 @@ const human = createHuman();
 human.position.set(0, 0, 0);
 scene.add(human);
 
-// ============================================================
-// УПРАВЛЕНИЕ
-// ============================================================
-
 const keys = {};
 
 const player = {
     x: 0,
     z: 0,
-    y: 0,           // высота (для прыжка)
-    vy: 0,          // вертикальная скорость
+    y: 0,
+    vy: 0,
     angle: 0,
     speed: 0.08,
     turnSpeed: 0.05,
@@ -419,7 +398,6 @@ document.addEventListener('keydown', (e) => {
     if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) selectSlot(parseInt(key) - 1);
     if (key === 'escape' && inventoryOpen) toggleInventory();
 
-    // Прыжок
     if (key === ' ' || normalizedKey === 'space') {
         jump();
     }
@@ -484,19 +462,14 @@ function selectSlot(slotIndex) {
 }
 window.selectSlot = selectSlot;
 
-// ============ ПРЫЖОК ============
-
 function jump() {
     if (inventoryOpen) return;
-    if (player.isJumping) return; // уже в воздухе
+    if (player.isJumping) return;
     player.vy = JUMP_FORCE;
     player.isJumping = true;
 }
 window.jump = jump;
 
-// ============ ПРИСЕД ============
-
-// Присед — через ShiftLeft или ShiftRight
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Shift') {
         player.isCrouching = true;
@@ -509,7 +482,6 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
-// Для мобильных — кнопка
 function crouchStart() {
     player.isCrouching = true;
 }
@@ -549,10 +521,6 @@ if (!isMobile) {
         }
     });
 }
-
-// ============================================================
-// РАЗРУШЕНИЕ / УСТАНОВКА
-// ============================================================
 
 const raycaster = new THREE.Raycaster();
 const screenCenter = new THREE.Vector2(0, 0);
@@ -640,16 +608,11 @@ if (isMobile) {
     }, { passive: true });
 }
 
-// ============================================================
-// ОБНОВЛЕНИЕ
-// ============================================================
-
 function update() {
     if (!inventoryOpen) {
         if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
         if (keys['d'] || keys['arrowright']) player.angle -= player.turnSpeed;
 
-        // Скорость зависит от приседа
         const speed = player.isCrouching ? player.speed * 0.4 : player.speed;
 
         if (keys['w'] || keys['arrowup']) {
@@ -662,11 +625,9 @@ function update() {
         }
     }
 
-    // ============ ФИЗИКА ПРЫЖКА ============
     player.vy += GRAVITY;
     player.y += player.vy;
 
-    // Приземление
     if (player.y <= 0) {
         player.y = 0;
         player.vy = 0;
@@ -677,7 +638,6 @@ function update() {
     player.x = Math.max(-limit, Math.min(limit, player.x));
     player.z = Math.max(-limit, Math.min(limit, player.z));
 
-    // Приседание уменьшает высоту
     const crouchOffset = player.isCrouching ? -0.3 : 0;
 
     human.position.x = player.x;
@@ -751,10 +711,6 @@ if (!isMobile) {
     mobileOnly.forEach(el => el.style.display = 'none');
 }
 
-// ============================================================
-// ИКОНКИ
-// ============================================================
-
 function makeInvIcon(color, secondaryColor) {
     const size = 64;
     const c = document.createElement('canvas');
@@ -792,10 +748,6 @@ function getIcon(blockId) {
     ICON_CACHE[blockId] = makeInvIcon(block.color, block.secondaryColor);
     return ICON_CACHE[blockId];
 }
-
-// ============================================================
-// ПРЕВЬЮ
-// ============================================================
 
 function drawPlayerPreview() {
     const c = document.getElementById('player-preview');
@@ -855,10 +807,6 @@ function drawPlayerPreview() {
     ctx.fillRect(cx - 11, cy - 66, 3, 12);
     ctx.fillRect(cx + 8, cy - 66, 3, 12);
 }
-
-// ============================================================
-// КРАФТ
-// ============================================================
 
 const RECIPES = [
     { inputs: { 2: 1 }, output: 5, name: 'Доски' },
@@ -994,7 +942,6 @@ function craftItem() {
 
     if (!matched) return;
 
-    // Разблокируем блок, если его ещё нет
     if (!unlockedBlocks.includes(matched.output)) {
         unlockedBlocks.push(matched.output);
     }
@@ -1019,10 +966,6 @@ function resetCrafting() {
     checkRecipe();
 }
 window.resetCrafting = resetCrafting;
-
-// ============================================================
-// ИНИЦИАЛИЗАЦИЯ
-// ============================================================
 
 function initHotbar() {
     const invBar = document.getElementById('inventory-bar');
@@ -1056,7 +999,6 @@ function initInventoryModal() {
     if (!modal) return;
     modal.innerHTML = '';
 
-    // Показываем только разблокированные блоки
     unlockedBlocks.forEach((blockId, index) => {
         const block = ALL_BLOCKS[blockId];
         const slot = document.createElement('div');
@@ -1084,14 +1026,12 @@ yBtn.innerHTML = '🎒';
 yBtn.onclick = toggleInventory;
 document.body.appendChild(yBtn);
 
-// Кнопка прыжка (мобильные)
 const jumpBtn = document.createElement('button');
 jumpBtn.id = 'jump-btn';
 jumpBtn.innerHTML = '🔼';
 jumpBtn.onclick = jump;
 document.body.appendChild(jumpBtn);
 
-// Кнопка приседа (мобильные)
 const crouchBtn = document.createElement('button');
 crouchBtn.id = 'crouch-btn';
 crouchBtn.innerHTML = '🔽';
