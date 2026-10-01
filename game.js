@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 3.1: Ломать/ставить (ПК мышь + тел кнопки)
+// CUBE LIFE — Этап 4: Инвентарь блоков
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -9,8 +9,6 @@ if (tg) {
 }
 
 const canvas = document.getElementById('game-canvas');
-
-// Определяем — телефон или ПК
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
 // ============ СЦЕНА ============
@@ -103,6 +101,25 @@ function createLeafMaterial() {
     const tex = createTexture('#2d5a1e');
     return new THREE.MeshLambertMaterial({ map: tex });
 }
+
+function createDirtMaterial() {
+    const tex = createTexture('#5a3a1a');
+    return new THREE.MeshLambertMaterial({ map: tex });
+}
+
+// ============================================================
+// ИНВЕНТАРЬ — список доступных блоков
+// ============================================================
+
+const INVENTORY = [
+    { name: 'Трава',  material: createGrassMaterial(),  icon: '🟩' },
+    { name: 'Камень', material: createStoneMaterial(),  icon: '⬜' },
+    { name: 'Дерево', material: createWoodMaterial(),   icon: '🟫' },
+    { name: 'Листва', material: createLeafMaterial(),   icon: '🌿' },
+    { name: 'Земля',  material: createDirtMaterial(),   icon: '🟤' }
+];
+
+let selectedSlot = 0; // индекс текущего блока
 
 // ============ БЛОКИ ============
 
@@ -301,12 +318,27 @@ document.addEventListener('keydown', (e) => {
     if (normalizedKey === 'v') {
         toggleCamera();
     }
+    // Клавиши 1-5 — выбор блока
+    if (['1', '2', '3', '4', '5'].includes(key)) {
+        selectSlot(parseInt(key) - 1);
+    }
 });
 
 document.addEventListener('keyup', (e) => {
     const key = e.key.toLowerCase();
     const normalizedKey = KEY_MAP[key] || key;
     keys[normalizedKey] = false;
+});
+
+// Колесо мыши — переключение блоков
+document.addEventListener('wheel', (e) => {
+    if (isPointerLocked) {
+        if (e.deltaY > 0) {
+            selectSlot((selectedSlot + 1) % INVENTORY.length);
+        } else {
+            selectSlot((selectedSlot - 1 + INVENTORY.length) % INVENTORY.length);
+        }
+    }
 });
 
 function pressKey(key) {
@@ -325,7 +357,28 @@ function toggleCamera() {
 }
 window.toggleCamera = toggleCamera;
 
-// ============ POINTER LOCK (только ПК) ============
+// ============ ВЫБОР БЛОКА ============
+
+function selectSlot(index) {
+    if (index < 0 || index >= INVENTORY.length) return;
+    selectedSlot = index;
+
+    // Обновляем визуально слоты
+    document.querySelectorAll('.inv-slot').forEach((el, i) => {
+        if (i === index) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    });
+
+    // HUD с именем блока
+    const item = INVENTORY[index];
+    document.getElementById('selected-block').textContent = item.name;
+}
+window.selectSlot = selectSlot;
+
+// ============ POINTER LOCK ============
 let isPointerLocked = false;
 
 if (!isMobile) {
@@ -403,21 +456,19 @@ function placeBlock() {
 
     if (newPos.y < 0) return;
 
-    createBlock(newPos.x, newPos.y, newPos.z, grassMaterial);
+    // Ставим блок из инвентаря (текущий выбранный)
+    createBlock(newPos.x, newPos.y, newPos.z, INVENTORY[selectedSlot].material);
 }
 
-// Функции для кнопок на экране (для мобильных)
 window.breakBlockBtn = breakBlock;
 window.placeBlockBtn = placeBlock;
 
-// ============ МЫШЬ (только ПК) ============
+// ============ МЫШЬ (ПК) ============
 if (!isMobile) {
     document.addEventListener('mousedown', (e) => {
         if (e.button === 0) {
-            // ЛКМ — поставить
             placeBlock();
         } else if (e.button === 2) {
-            // ПКМ — сломать
             breakBlock();
         }
     });
@@ -543,8 +594,11 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ============ СКРЫВАЕМ КНОПКИ НА ПК ============
+// ============ СКРЫТЬ КНОПКИ НА ПК ============
 if (!isMobile) {
     const mobileOnly = document.querySelectorAll('.mobile-only');
     mobileOnly.forEach(el => el.style.display = 'none');
 }
+
+// ============ ИНИЦИАЛИЗАЦИЯ ИНВЕНТАРЯ UI ============
+selectSlot(0);
