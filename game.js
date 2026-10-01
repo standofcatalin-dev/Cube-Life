@@ -1,5 +1,5 @@
 // ============================================================
-// CUBE LIFE — Этап 7: Полный инвентарь + фиксы
+// CUBE LIFE — Этап 8: Оптимизация + чёткие иконки
 // ============================================================
 
 const tg = window.Telegram?.WebApp;
@@ -163,6 +163,9 @@ const INVENTORY = [
 
 let selectedSlot = 0;
 let inventoryOpen = false;
+
+// Кэш иконок
+const ICON_CACHE = {};
 
 // ============ БЛОКИ ============
 
@@ -385,18 +388,10 @@ document.addEventListener('keydown', (e) => {
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(key)) {
         e.preventDefault();
     }
-    if (normalizedKey === 'v') {
-        toggleCamera();
-    }
-    if (normalizedKey === 'y') {
-        toggleInventory();
-    }
-    if (['1', '2', '3', '4', '5'].includes(key)) {
-        selectSlot(parseInt(key) - 1);
-    }
-    if (key === 'escape' && inventoryOpen) {
-        toggleInventory();
-    }
+    if (normalizedKey === 'v') toggleCamera();
+    if (normalizedKey === 'y') toggleInventory();
+    if (['1', '2', '3', '4', '5'].includes(key)) selectSlot(parseInt(key) - 1);
+    if (key === 'escape' && inventoryOpen) toggleInventory();
 });
 
 document.addEventListener('keyup', (e) => {
@@ -407,29 +402,20 @@ document.addEventListener('keyup', (e) => {
 
 document.addEventListener('wheel', (e) => {
     if (isPointerLocked && !inventoryOpen) {
-        if (e.deltaY > 0) {
-            selectSlot((selectedSlot + 1) % INVENTORY.length);
-        } else {
-            selectSlot((selectedSlot - 1 + INVENTORY.length) % INVENTORY.length);
-        }
+        if (e.deltaY > 0) selectSlot((selectedSlot + 1) % INVENTORY.length);
+        else selectSlot((selectedSlot - 1 + INVENTORY.length) % INVENTORY.length);
     }
 });
 
-function pressKey(key) {
-    keys[key] = true;
-}
-function releaseKey(key) {
-    keys[key] = false;
-}
+function pressKey(key) { keys[key] = true; }
+function releaseKey(key) { keys[key] = false; }
 window.pressKey = pressKey;
 window.releaseKey = releaseKey;
 
 function toggleCamera() {
     cameraMode = cameraMode === 3 ? 1 : 3;
     const el = document.getElementById('camera-mode');
-    if (el) {
-        el.textContent = cameraMode === 3 ? '3-е лицо' : '1-е лицо';
-    }
+    if (el) el.textContent = cameraMode === 3 ? '3-е лицо' : '1-е лицо';
 }
 window.toggleCamera = toggleCamera;
 
@@ -438,16 +424,11 @@ window.toggleCamera = toggleCamera;
 function toggleInventory() {
     inventoryOpen = !inventoryOpen;
     const modal = document.getElementById('inventory-modal');
-    if (!modal) {
-        console.log('inventory-modal не найден');
-        return;
-    }
+    if (!modal) return;
 
     if (inventoryOpen) {
         modal.classList.add('open');
-        if (isPointerLocked) {
-            document.exitPointerLock();
-        }
+        if (isPointerLocked) document.exitPointerLock();
     } else {
         modal.classList.remove('open');
     }
@@ -459,25 +440,17 @@ function selectSlot(index) {
     selectedSlot = index;
 
     document.querySelectorAll('.inv-slot[data-hotbar]').forEach((el, i) => {
-        if (i === index) {
-            el.classList.add('active');
-        } else {
-            el.classList.remove('active');
-        }
+        if (i === index) el.classList.add('active');
+        else el.classList.remove('active');
     });
 
     document.querySelectorAll('.inv-modal-slot').forEach((el, i) => {
-        if (i === index) {
-            el.classList.add('active');
-        } else {
-            el.classList.remove('active');
-        }
+        if (i === index) el.classList.add('active');
+        else el.classList.remove('active');
     });
 
     const selectedEl = document.getElementById('selected-block');
-    if (selectedEl) {
-        selectedEl.textContent = INVENTORY[index].name;
-    }
+    if (selectedEl) selectedEl.textContent = INVENTORY[index].name;
 }
 window.selectSlot = selectSlot;
 
@@ -487,9 +460,7 @@ let isPointerLocked = false;
 if (!isMobile) {
     canvas.addEventListener('click', () => {
         if (!isPointerLocked && !inventoryOpen) {
-            canvas.requestPointerLock().catch(err => {
-                console.log('Pointer lock error:', err);
-            });
+            canvas.requestPointerLock().catch(err => console.log(err));
         }
     });
 
@@ -558,7 +529,6 @@ function placeBlock() {
     const dy = newPos.y - 0.5;
     const dz = Math.abs(newPos.z - player.z);
     if (dx < 0.6 && dz < 0.6 && dy > -0.5 && dy < 1.5) return;
-
     if (newPos.y < 0) return;
 
     createBlock(newPos.x, newPos.y, newPos.z, INVENTORY[selectedSlot].material);
@@ -571,11 +541,8 @@ window.placeBlockBtn = placeBlock;
 if (!isMobile) {
     document.addEventListener('mousedown', (e) => {
         if (inventoryOpen) return;
-        if (e.button === 0) {
-            placeBlock();
-        } else if (e.button === 2) {
-            breakBlock();
-        }
+        if (e.button === 0) placeBlock();
+        else if (e.button === 2) breakBlock();
     });
 
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -614,12 +581,8 @@ if (isMobile) {
 // ============ ОБНОВЛЕНИЕ ============
 function update() {
     if (!inventoryOpen) {
-        if (keys['a'] || keys['arrowleft']) {
-            player.angle += player.turnSpeed;
-        }
-        if (keys['d'] || keys['arrowright']) {
-            player.angle -= player.turnSpeed;
-        }
+        if (keys['a'] || keys['arrowleft']) player.angle += player.turnSpeed;
+        if (keys['d'] || keys['arrowright']) player.angle -= player.turnSpeed;
 
         if (keys['w'] || keys['arrowup']) {
             player.x += Math.sin(player.angle) * player.speed;
@@ -684,9 +647,7 @@ function update() {
     }
 
     const worldInfoEl = document.getElementById('world-info');
-    if (worldInfoEl) {
-        worldInfoEl.textContent = blockMap.size + ' блоков';
-    }
+    if (worldInfoEl) worldInfoEl.textContent = blockMap.size + ' блоков';
 }
 
 function animate() {
@@ -709,44 +670,50 @@ if (!isMobile) {
 }
 
 // ============================================================
-// ИКОНКИ И ИНТЕРФЕЙС
+// ИКОНКИ БЛОКОВ
 // ============================================================
 
 function makeInvIcon(color, secondaryColor) {
-    const size = 48;
+    const size = 64;
     const c = document.createElement('canvas');
     c.width = size;
     c.height = size;
     const ctx = c.getContext('2d');
 
     const gradient = ctx.createLinearGradient(0, 0, 0, size);
-    gradient.addColorStop(0, lightenColor(color, 30));
-    gradient.addColorStop(1, darkenColor(color, 30));
+    gradient.addColorStop(0, lightenColor(color, 40));
+    gradient.addColorStop(1, darkenColor(color, 40));
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, size, size);
 
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 80; i++) {
         const x = Math.random() * size;
         const y = Math.random() * size;
-        const w = 3 + Math.random() * 5;
-        const h = 3 + Math.random() * 5;
+        const w = 3 + Math.random() * 6;
+        const h = 3 + Math.random() * 6;
         ctx.fillStyle = secondaryColor;
-        ctx.globalAlpha = 0.6;
+        ctx.globalAlpha = 0.5;
         ctx.fillRect(x, y, w, h);
     }
     ctx.globalAlpha = 1;
 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
     ctx.lineWidth = 3;
     ctx.strokeRect(1.5, 1.5, size - 3, size - 3);
 
     return c.toDataURL();
 }
 
+function getIcon(index) {
+    if (ICON_CACHE[index]) return ICON_CACHE[index];
+    const item = INVENTORY[index];
+    ICON_CACHE[index] = makeInvIcon(item.color, item.secondaryColor);
+    return ICON_CACHE[index];
+}
+
 function initHotbar() {
     const invBar = document.getElementById('inventory-bar');
     if (!invBar) return;
-
     invBar.innerHTML = '';
 
     INVENTORY.forEach((item, index) => {
@@ -757,7 +724,7 @@ function initHotbar() {
 
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
-        img.src = makeInvIcon(item.color, item.secondaryColor);
+        img.src = getIcon(index);
         img.alt = item.name;
         slot.appendChild(img);
 
@@ -766,9 +733,7 @@ function initHotbar() {
         num.textContent = (index + 1);
         slot.appendChild(num);
 
-        slot.title = item.name;
         slot.onclick = () => selectSlot(index);
-
         invBar.appendChild(slot);
     });
 }
@@ -776,7 +741,6 @@ function initHotbar() {
 function initInventoryModal() {
     const modal = document.getElementById('inventory-modal-grid');
     if (!modal) return;
-
     modal.innerHTML = '';
 
     INVENTORY.forEach((item, index) => {
@@ -786,7 +750,7 @@ function initInventoryModal() {
 
         const img = document.createElement('img');
         img.className = 'inv-icon-img';
-        img.src = makeInvIcon(item.color, item.secondaryColor);
+        img.src = getIcon(index);
         img.alt = item.name;
         slot.appendChild(img);
 
@@ -801,7 +765,6 @@ function initInventoryModal() {
         slot.appendChild(num);
 
         slot.onclick = () => selectSlot(index);
-
         modal.appendChild(slot);
     });
 }
@@ -809,17 +772,13 @@ function initInventoryModal() {
 initHotbar();
 initInventoryModal();
 
-// Кнопка 🎒 для мобильных
 const yBtn = document.createElement('button');
 yBtn.id = 'inventory-toggle-btn';
 yBtn.innerHTML = '🎒';
 yBtn.onclick = toggleInventory;
 document.body.appendChild(yBtn);
 
-// Кнопка закрытия в модальном окне
 const closeBtn = document.querySelector('.inv-modal-close');
-if (closeBtn) {
-    closeBtn.onclick = toggleInventory;
-}
+if (closeBtn) closeBtn.onclick = toggleInventory;
 
 selectSlot(0);
