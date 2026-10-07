@@ -146,17 +146,13 @@ const MY_USERNAME = 'Catalingorpin';
 
 function contactMe(){
     tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('success');
-    if(tg.initData&&user){
-        tg.sendData(JSON.stringify({
-            action:'contact_request',
-            userId:user.id,
-            username:user.username||'',
-            firstName:user.first_name||'',
-            timestamp:Date.now()
-        }));
-        tg.close();
+
+    // Открываем чат с тобой — работает и в Telegram, и в браузере
+    const url = 'https://t.me/' + MY_USERNAME;
+    if(tg.openTelegramLink){
+        tg.openTelegramLink(url);
     }else{
-        window.open('https://t.me/'+MY_USERNAME,'_blank');
+        window.open(url, '_blank');
     }
 }
 </script>
