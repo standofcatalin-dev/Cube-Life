@@ -1,19 +1,23 @@
-// ===== Инициализация Telegram WebApp =====
 const tg = window.Telegram.WebApp;
+
+// ✅ Раскрываем на весь экран
 tg.expand();
 tg.ready();
 
-// Красим хедер под наш тёмный фон
+// ✅ ПРИНУДИТЕЛЬНО ставим тёмные цвета хедера
 try {
     tg.setHeaderColor('#0a0a1a');
     tg.setBackgroundColor('#0a0a1a');
+    tg.setBottomBarColor?.('#0a0a1a');
 } catch(e) {}
 
-// Получаем данные пользователя
+// ✅ Отключаем вертикальные свайпы закрытия (чтобы не мешало)
+try { tg.disableVerticalSwipes?.(); } catch(e) {}
+
+// ✅ Получаем юзера
 const user = tg.initDataUnsafe?.user;
 const userName = user?.first_name || 'друг';
 
-// Персонализированное приветствие 🎯
 if (user) {
     const subtitle = document.querySelector('.hero-subtitle');
     if (subtitle) {
@@ -21,28 +25,17 @@ if (user) {
     }
 }
 
-// ===== Плавный скролл к форме =====
+// Плавный скролл
 function scrollToOrder() {
     document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
-
-    // Легкая вибрация если доступна
-    if (tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('medium');
-    }
+    tg.HapticFeedback?.impactOccurred('medium');
 }
 
-// ===== Связь со мной =====
+// Связь
 function contactMe() {
-    // Вибрация
-    if (tg.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred('success');
-    }
+    tg.HapticFeedback?.notificationOccurred('success');
+    const myUsername = 'ваш_username'; // ← ЗАМЕНИ
 
-    // Вариант 1: открыть чат с вами в Telegram
-    // 👇 ЗАМЕНИТЕ НА ВАШ USERNAME (без @)
-    const myUsername = 'ваш_username';
-
-    // Отправляем данные боту (если сайт открыт из бота)
     if (tg.initData && user) {
         tg.sendData(JSON.stringify({
             action: 'contact_request',
@@ -53,17 +46,11 @@ function contactMe() {
         }));
         tg.close();
     } else {
-        // Если открыт вне Telegram — открываем ссылку
         window.open(`https://t.me/${myUsername}`, '_blank');
     }
 }
 
-// ===== Анимация появления карточек при скролле =====
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
+// Анимация появления
 const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -72,17 +59,11 @@ const observer = new IntersectionObserver((entries) => {
             observer.unobserve(entry.target);
         }
     });
-}, observerOptions);
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-// Изначально прячем все карточки
 document.querySelectorAll('.fact-card, .service, .step').forEach((el, i) => {
     el.style.opacity = '0';
     el.style.transform = 'translateY(20px)';
     el.style.transition = `all 0.5s ease ${i * 0.05}s`;
     observer.observe(el);
-});
-
-// ===== Плавное появление hero =====
-window.addEventListener('load', () => {
-    document.querySelector('.hero').style.opacity = '1';
 });
