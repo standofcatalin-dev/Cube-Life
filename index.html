@@ -3,130 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cube Life</title>
-    <link rel="stylesheet" href="style.css">
+    <title>🤖 Telegram-боты на заказ</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
 
-        <div id="start-menu">
-            <div class="menu-content">
-                <div class="menu-title">⬛ CUBE LIFE</div>
-                <canvas id="menu-player-canvas" width="160" height="240"></canvas>
-                <div class="menu-subtitle">Выбери режим</div>
-                <button class="menu-btn game" onclick="startGame('survival64')">
-                    🎮 Играть
-                    <span class="menu-hint">По 64 блока</span>
-                </button>
-                <button class="menu-btn survival" onclick="startGame('survival0')">
-                    🏆 Выживание
-                    <span class="menu-hint">С нуля</span>
-                </button>
-                <button class="menu-btn creative" onclick="startGame('creative')">
-                    🎨 Творчество
-                    <span class="menu-hint">По 999 блоков</span>
-                </button>
-            </div>
-        </div>
-
-        <div id="pause-menu">
-            <div class="pause-content">
-                <div class="pause-title">⏸ ПАУЗА</div>
-                <button id="pause-resume-btn" class="pause-btn resume">▶ Продолжить</button>
-                <button id="pause-edit-btn" class="pause-btn edit">⚙️ Настроить кнопки</button>
-                <button id="pause-exit-btn" class="pause-btn exit">🚪 Выйти в меню</button>
-                <div class="pause-hint">Esc — продолжить</div>
-            </div>
-        </div>
-
-        <div id="hud">
-            <div class="hud-title">⬛ CUBE LIFE</div>
-            <div class="hud-right">
-                <div class="hud-info">🌍 <span id="world-info">0</span> блоков</div>
-                <div class="hud-info">📷 <span id="camera-mode">3-е лицо</span></div>
-            </div>
-        </div>
-
-        <!-- ⚙️ КНОПКА РЕЖИМА РЕДАКТИРОВАНИЯ -->
-        <button id="edit-toggle-btn" title="Настроить кнопки">⚙️</button>
-
-        <!-- МОБИЛЬНЫЕ КНОПКИ (перемещаемые) -->
-        <button id="btn-a" class="mobile-btn" data-btn="a">◀</button>
-        <button id="btn-d" class="mobile-btn" data-btn="d">▶</button>
-        <button id="btn-w" class="mobile-btn" data-btn="w">▲</button>
-        <button id="btn-s" class="mobile-btn" data-btn="s">▼</button>
-        <button id="btn-jump" class="mobile-btn large" data-btn="jump">🔼</button>
-        <button id="btn-crouch" class="mobile-btn large" data-btn="crouch">🔽</button>
-        <button id="btn-break" class="mobile-btn large" data-btn="break">⛏️</button>
-        <button id="btn-place" class="mobile-btn large" data-btn="place">🧱</button>
-        <button id="btn-inventory" class="mobile-btn small" data-btn="inventory">🎒</button>
-        <button id="btn-camera" class="mobile-btn small" data-btn="camera">📷</button>
-
-        <div id="edit-hint">
-            ✋ Перетаскивай кнопки<br>
-            <small>Нажми ⚙️ снова, чтобы выйти</small>
-        </div>
-
-        <div id="selected-block-info">
-            Блок: <span id="selected-block">Трава</span>
-        </div>
-
-        <div id="inventory-bar"></div>
-
-        <div id="inventory-modal">
-            <div class="inv-modal-content">
-                <div class="inv-modal-header">
-                    <h2>🎒 Инвентарь и Крафт</h2>
-                    <button class="inv-modal-close">✖</button>
-                </div>
-
-                <div class="inv-player-preview">
-                    <canvas id="player-preview" width="80" height="120"></canvas>
-                    <div class="inv-player-stats">
-                        <div class="inv-stat-row">
-                            <span class="inv-stat-label">⭐ Уровень:</span>
-                            <span class="inv-stat-value">1</span>
-                        </div>
-                        <div class="inv-stat-row">
-                            <span class="inv-stat-label">❤️ HP:</span>
-                            <span class="inv-stat-value">100/100</span>
-                        </div>
-                        <div class="inv-stat-row">
-                            <span class="inv-stat-label">💰 Золото:</span>
-                            <span class="inv-stat-value">50</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="craft-section-inv">
-                    <div class="craft-label">🔨 КРАФТ</div>
-                    <div class="craft-grid-wrapper">
-                        <div id="crafting-grid" class="craft-grid"></div>
-                        <div class="craft-arrow">→</div>
-                        <div id="crafting-result" class="craft-result">
-                            <img id="crafting-result-img" class="inv-icon-img" alt="Результат">
-                            <div id="crafting-result-name" class="craft-result-name">...</div>
-                        </div>
-                    </div>
-                    <div class="craft-actions">
-                        <button id="craft-btn" class="craft-action-btn">✨ Создать</button>
-                        <button id="craft-reset-btn" class="craft-action-btn reset">🔄 Сброс</button>
-                    </div>
-                </div>
-
-                <div class="craft-label">📦 БЛОКИ (нажми — добавить в крафт)</div>
-                <div id="inventory-modal-grid" class="inv-modal-grid"></div>
-            </div>
-        </div>
-
-        <div id="craft-notification"></div>
-
-        <div id="hint">Y — инвентарь • Space — прыжок • Shift — присед • Esc — пауза</div>
+    <!-- Анимированный фон -->
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-    <script src="game.js"></script>
+    <!-- HERO секция -->
+    <section class="hero">
+        <div class="badge">🔥 Свободен для заказов</div>
+        <h1 class="hero-title">
+            Создаю <span class="gradient-text">Telegram-ботов</span><br>
+            под ваш бизнес 🚀
+        </h1>
+        <p class="hero-subtitle">
+            Автоматизирую рутину, продажи и клиентов.<br>
+            Бот работает 24/7 — а вы отдыхаете 😎
+        </p>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-num">50+</div>
+                <div class="stat-label">ботов</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">24ч</div>
+                <div class="stat-label">срок старта</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">100%</div>
+                <div class="stat-label">гарантия</div>
+            </div>
+        </div>
+
+        <button class="cta-btn" onclick="scrollToOrder()">
+            💬 Обсудить проект
+        </button>
+    </section>
+
+    <!-- Факты почему это круто -->
+    <section class="section">
+        <h2 class="section-title">💡 Почему Telegram-бот — это выгодно</h2>
+
+        <div class="facts-grid">
+            <div class="fact-card">
+                <div class="fact-emoji">📈</div>
+                <h3>+40% к продажам</h3>
+                <p>Бот отвечает мгновенно, не теряет заявки и напоминает клиенту о себе.</p>
+            </div>
+
+            <div class="fact-card">
+                <div class="fact-emoji">⏰</div>
+                <h3>Экономия 20+ часов/нед</h3>
+                <p>Рутинные ответы, запись, доставка — всё автоматически.</p>
+            </div>
+
+            <div class="fact-card">
+                <div class="fact-emoji">💰</div>
+                <h3>Дешевле сайта в 5 раз</h3>
+                <p>Не нужен хостинг, домен, SEO. Работает сразу в Telegram.</p>
+            </div>
+
+            <div class="fact-card">
+                <div class="fact-emoji">🚀</div>
+                <h3>Запуск за 2-3 дня</h3>
+                <p>Простой бот — сегодня. Сложный с оплатой — за неделю.</p>
+            </div>
+
+            <div class="fact-card">
+                <div class="fact-emoji">🎯</div>
+                <h3>900 млн аудитории</h3>
+                <p>В Telegram уже сидят ваши клиенты. Осталось их взять.</p>
+            </div>
+
+            <div class="fact-card">
+                <div class="fact-emoji">🔒</div>
+                <h3>Работает 24/7</h3>
+                <p>Не болеет, не спит, не уходит в отпуск. Никогда.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Услуги -->
+    <section class="section">
+        <h2 class="section-title">🛠 Что я делаю</h2>
+
+        <div class="services">
+            <div class="service">
+                <span class="service-icon">🛒</span>
+                <div>
+                    <h4>Магазины и продажи</h4>
+                    <p>Каталог, корзина, оплата, доставка</p>
+                </div>
+            </div>
+            <div class="service">
+                <span class="service-icon">📅</span>
+                <div>
+                    <h4>Запись на услуги</h4>
+                    <p>Салоны, врачи, автосервис</p>
+                </div>
+            </div>
+            <div class="service">
+                <span class="service-icon">💬</span>
+                <div>
+                    <h4>Автоответчики</h4>
+                    <p>FAQ, поддержка, рассылки</p>
+                </div>
+            </div>
+            <div class="service">
+                <span class="service-icon">🎮</span>
+                <div>
+                    <h4>Web Apps и игры</h4>
+                    <p>Мини-приложения внутри Telegram</p>
+                </div>
+            </div>
+            <div class="service">
+                <span class="service-icon">🤝</span>
+                <div>
+                    <h4>CRM-интеграции</h4>
+                    <p>Заявки в Google Sheets, Notion, CRM</p>
+                </div>
+            </div>
+            <div class="service">
+                <span class="service-icon">🤖</span>
+                <div>
+                    <h4>AI-боты</h4>
+                    <p>ChatGPT внутри вашего бота</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Процесс -->
+    <section class="section">
+        <h2 class="section-title">⚡ Как мы работаем</h2>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <h4>Обсуждаем</h4>
+                <p>Ваши задачи и идеи</p>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <h4>Прототип</h4>
+                <p>Показываю макет за 1 день</p>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <h4>Разработка</h4>
+                <p>Пишу и тестирую бота</p>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <h4>Запуск 🎉</h4>
+                <p>Передаю + учу пользоваться</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section" id="order">
+        <div class="cta-card">
+            <h2>🎁 Готов обсудить ваш проект?</h2>
+            <p>Первая консультация — бесплатно.<br>Расскажу, какого бота нужно именно вам.</p>
+
+            <div class="price-hint">
+                💵 Простые боты — от <strong>5 000 ₽</strong><br>
+                💎 Сложные с оплатой — от <strong>15 000 ₽</strong>
+            </div>
+
+            <button class="cta-btn big" onclick="contactMe()">
+                ✍️ Написать мне в Telegram
+            </button>
+            <p class="hint">Отвечаю в течение часа ⏱</p>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>© 2025 · Делаю ботов с ❤️</p>
+    </footer>
+
+    <script src="app.js"></script>
 </body>
 </html>
